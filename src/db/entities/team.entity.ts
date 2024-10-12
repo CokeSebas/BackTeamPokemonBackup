@@ -1,28 +1,22 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne, OneToMany } from 'typeorm';
-import { User } from './user.entity';
-import { Format } from './format.entity';
-import { PokemonBuild } from './pokemon_build.entity';  // Asegúrate de que esta importación sea correcta
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
 
-@Entity('teams')
+@Entity()
 export class Team {
   @PrimaryGeneratedColumn()
-  id: number;  // Identificador único del equipo
+  id: number;
 
-  @Column({ length: 100 })
-  teamName: string;  // Nombre del equipo
+  @Column({ length: 100, name: 'team_name' })
+  teamName: string;
 
-  @Column({ length: 255, nullable: true })
-  urlPaste: string;  // URL donde se ha compartido o registrado el equipo
+  @Column({ length: 255, nullable: true, name: 'url_paste' })
+  urlPaste: string;
 
-  @CreateDateColumn({ type: 'timestamptz' })
-  dateCreated: Date;  // Fecha de creación del equipo
+  @Column({name : 'format_id'})
+  formatId: number;
 
-  @ManyToOne(() => User, (user) => user.teams, { onDelete: 'CASCADE' })
-  user: User;  // Relación con la tabla users (muchos equipos pertenecen a un usuario)
+  @Column({name : 'user_id'})
+  userId: number;
 
-  @ManyToOne(() => Format, (format) => format.teams, { onDelete: 'RESTRICT' })
-  format: Format;  // Relación con la tabla formats (cada equipo tiene un formato)
-
-  @OneToMany(() => PokemonBuild, (pokemonBuild) => pokemonBuild.team)  // Relación uno-a-muchos
-  pokemonBuilds: PokemonBuild[];  // Relación con la tabla pokemon_builds
+  @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', name : 'date_created' })
+  dateCreated: Date;
 }

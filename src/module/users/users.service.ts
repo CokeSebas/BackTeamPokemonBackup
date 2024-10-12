@@ -1,11 +1,10 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from 'src/db/entities/user.entity';
 import { Repository } from 'typeorm';
 import { MyLoggerService } from '../common/logger/myLogger.service';
-import { PasswordEncriptService } from '../common/password-encript/password-encript.service';
 
 @Injectable()
 export class UsersService {
@@ -29,17 +28,19 @@ export class UsersService {
     return this.userRepository.find();
   }
 
-  findOneByEmail(email: string) {
+  async findOneByEmail(email: string) {
     this.logger.log('(S) Getting user by email: ', UsersService.name);
     return this.userRepository.findOne({ where: { email } });
   }
-  findOne(id: number) {
-    this.logger.log('(S) Getting user by id: ', UsersService.name);
+  
+  async findOne(id: number) {
+    this.logger.log('(S) Getting user by id: '+id, UsersService.name);
     return this.userRepository.findOne({ where: { id } });
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async update(id: number, updateUserDto: UpdateUserDto) {
+    this.logger.log('(S) Updating user: '+id, UsersService.name);
+    return this.userRepository.update(id, updateUserDto);
   }
 
   remove(id: number) {

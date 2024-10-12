@@ -35,7 +35,6 @@ export class UsersController {
     const salida = await this.usersResolver.getAll();
 
     return res.status(salida[0].code).json({salida});
-    //return this.usersService.findAll();
   }
 
   @Get(':id')
@@ -45,9 +44,11 @@ export class UsersController {
     return salida;
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
+  @Post('/edit/:id')
+  async update(@Param('id') id: number, @Body() updateUserDto: UpdateUserDto, @Res() res: Response): Promise<Object> {
+    this.logger.log('(C) Updating user '+id, UsersController.name);
+    const salida = await this.usersResolver.editUser(id, updateUserDto);
+    return res.status(salida[0].code).json({salida});
   }
 
   @Delete(':id')

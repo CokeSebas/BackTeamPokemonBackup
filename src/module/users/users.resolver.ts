@@ -1,9 +1,9 @@
-import { User } from "src/db/entities/user.entity";
 import { MyLoggerService } from "../common/logger/myLogger.service";
 import { PasswordEncriptService } from "../common/password-encript/password-encript.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UsersService } from "./users.service";
 import { Injectable } from "@nestjs/common";
+import { UpdateUserDto } from "./dto/update-user.dto";
 
 @Injectable()
 export class UsersResolver {
@@ -40,9 +40,7 @@ export class UsersResolver {
       if (provider === 'local') {
         hashedPassword = await this.passwordEncriptService.encriptPassword(passwordHash);
       }
-  
-      //console.log(hashedPassword);
-  
+
       createUserDto.passwordHash = hashedPassword;
         
       // Crear un nuevo usuario
@@ -54,11 +52,7 @@ export class UsersResolver {
         code: 200
       }];
     }
-
-
     return salida;
-
-    //return this.userRepository.save(user);  // Guardar el nuevo usuario en la base de datos
   }
 
   async getAll() {
@@ -69,10 +63,10 @@ export class UsersResolver {
 
     users.forEach(element => {
       let aux = {
-        'name': 'Jorge',
-        'lastName': 'Tapia',
-        'email': 'cokesebas@gmail.com',
-        'avatarUrl': '',
+        'name': element.name,
+        'lastName': element.lastName,
+        'email': element.email,
+        'avatarUrl': element.avatarUrl,
       }
 
       datos.push(aux);
@@ -117,6 +111,52 @@ export class UsersResolver {
       }];
     }
     
+    return salida;
+  }
+
+  async editUser(id: number, updateUserDto: UpdateUserDto): Promise<Object> {
+    this.logger.log('(R) Edit user: '+id, UsersResolver.name);
+
+    let salida = [], data = {};
+
+    const userExists = await this.usersService.findOne(id);
+    
+    if(userExists){
+      const user = await this.usersService.update(id, updateUserDto);
+      
+      if(user.affected == 1){
+        
+        data = {
+          'name': updateUserDto.name,
+          'lastName': updateUserDto.lastName,
+          'email': updateUserDto.email,
+          'avatarUrl': updateUserDto.avatarUrl,
+        };
+  
+        salida = [{
+          data: data,
+          message: 'Usuario editado correctamente',
+          status: 'success',
+          code: 200,
+        }];
+
+  
+      }else{
+        salida = [{
+          message: 'Hubo un error al editar',
+          status: 'error',
+          code: 500,
+        }];
+      }
+
+    }else{
+      salida = [{
+        message: 'Usuario no encontrado',
+        status: 'error',
+        code: 404
+      }]
+    }
+
     return salida;
   }
 }

@@ -1,4 +1,4 @@
-import { IsString, IsEmail, IsOptional, IsEnum } from 'class-validator';
+import { IsString, IsEmail, IsOptional, IsEnum, IsBoolean } from 'class-validator';
 
 export class CreateUserDto {
   @IsString()
@@ -19,4 +19,8 @@ export class CreateUserDto {
 
   @IsEnum(['local', 'google'])
   provider: 'local' | 'google';  // Proveedor de autenticación
+
+  @IsBoolean()
+  @IsOptional()
+  isActive?: boolean;
 }

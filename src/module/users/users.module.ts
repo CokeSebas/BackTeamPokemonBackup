@@ -13,6 +13,6 @@ import { UsersResolver } from './users.resolver';
   ],
   controllers: [UsersController],
   providers: [UsersService, MyLoggerService, PasswordEncriptService, UsersResolver],
-  exports: [UsersService],
+  exports: [UsersResolver],
 })
 export class UsersModule {}

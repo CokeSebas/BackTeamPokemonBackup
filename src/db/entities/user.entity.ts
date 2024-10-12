@@ -44,6 +44,6 @@ export class User {
   @UpdateDateColumn({ type: 'timestamptz', name: 'updated_at' })
   updatedAt: Date; // Fecha de última actualización
 
-  @OneToMany(() => Team, (team) => team.user)
-  teams: Team[]; // Relación con los equipos que este usuario posee
+  @Column({ type: 'boolean', default: true, name: 'is_active' })
+  isActive: boolean;
 }

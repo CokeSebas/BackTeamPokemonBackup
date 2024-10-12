@@ -5,7 +5,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { CommonModule } from './module/common/common.module';
 import { UsersModule } from './module/users/users.module';
-
+import { TeamsModule } from './module/teams/teams.module';
+import { PokemonModule } from './module/pokemon/pokemon.module';
 
 
 @Module({
@@ -25,7 +26,9 @@ import { UsersModule } from './module/users/users.module';
       logging: false,  // Habilitar logging
     }),
     CommonModule,
-    UsersModule
+    UsersModule,
+    TeamsModule,
+    PokemonModule
   ],
   controllers: [
     AppController
