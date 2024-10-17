@@ -7,6 +7,7 @@ import { CommonModule } from './module/common/common.module';
 import { UsersModule } from './module/users/users.module';
 import { TeamsModule } from './module/teams/teams.module';
 import { PokemonModule } from './module/pokemon/pokemon.module';
+import { FormatsModule } from './module/formats/formats.module';
 
 
 @Module({
@@ -28,7 +29,8 @@ import { PokemonModule } from './module/pokemon/pokemon.module';
     CommonModule,
     UsersModule,
     TeamsModule,
-    PokemonModule
+    PokemonModule,
+    FormatsModule
   ],
   controllers: [
     AppController

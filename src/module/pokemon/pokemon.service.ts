@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreatePokemonDto } from './dto/create-pokemon.dto';
 import { UpdatePokemonDto } from './dto/update-pokemon.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Pokemon } from 'src/db/entities/pokemon_build.entity';
+import { Pokemon } from 'src/db/entities/pokemon.entity';
 import { Repository } from 'typeorm';
 import { MyLoggerService } from '../common/logger/myLogger.service';
 
@@ -15,7 +15,7 @@ export class PokemonService {
     private readonly logger: MyLoggerService
   ) {}
 
-  async create(createPokemonDto: CreatePokemonDto): Promise<Pokemon> {
+  async create(createPokemonDto: Object): Promise<Pokemon> {
     this.logger.log('(S) Creating pokemon: ', PokemonService.name);
     const pokemon = this.pokemonRepository.create(createPokemonDto);
     return this.pokemonRepository.save(pokemon);

@@ -4,13 +4,15 @@ import { CreateUserDto } from "./dto/create-user.dto";
 import { UsersService } from "./users.service";
 import { Injectable } from "@nestjs/common";
 import { UpdateUserDto } from "./dto/update-user.dto";
+import { JwtTokenService } from "../common/jwt-token/jwt-token.service";
 
 @Injectable()
 export class UsersResolver {
   constructor(
       private readonly usersService: UsersService,
       private readonly logger: MyLoggerService,
-      private readonly passwordEncriptService: PasswordEncriptService
+      private readonly passwordEncriptService: PasswordEncriptService,
+      private readonly jwtTokenService: JwtTokenService
   ){}
 
   async create(createUserDto: CreateUserDto): Promise<Object> {
@@ -158,5 +160,62 @@ export class UsersResolver {
     }
 
     return salida;
+  }
+
+  async loginUser(loginUserDto: CreateUserDto): Promise<Object> {
+    this.logger.log('(R) Login user: ', UsersResolver.name);
+
+    let salida = [], data = {};
+
+    const email = loginUserDto.email;
+
+    const user = await this.usersService.findOneByEmail(email);
+
+    if (!user) {
+      this.logger.error('El usuario no existe', UsersResolver.name);
+      
+      salida = [{
+        message: 'El usuario no existe',
+        status: 'error',
+        code: 404
+      }];
+
+      return salida;
+    }
+
+    const password = loginUserDto.passwordHash;
+
+    const isPasswordValid = await this.passwordEncriptService.comparePassword(password, user.passwordHash);
+
+    if (!isPasswordValid) {
+      this.logger.error('La contraseña es incorrecta', UsersResolver.name);
+
+      salida = [{
+        data: data,
+        message: 'Usuario o contraseña incorrecta',
+        status: 'error',
+        code: 202
+      }];
+      return salida;
+    }
+
+    const token = await this.jwtTokenService.createToken(user.id);
+
+    data = {
+      'name': user.name,
+      'lastName': user.lastName,
+      'email': user.email,
+      'avatarUrl': user.avatarUrl,
+      'token': token
+    };
+
+    salida = [{ 
+      data: data,
+      message: 'Usuario autenticado correctamente',
+      status: 'success',
+      code: 200 
+    }];
+
+    return salida;    
   }
 }

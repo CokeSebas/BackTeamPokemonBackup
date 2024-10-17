@@ -1,4 +1,4 @@
-import { IsInt, IsNotEmpty, IsOptional, IsString, MaxLength, Min, Max } from 'class-validator';
+import { IsInt, IsNotEmpty, IsOptional, IsString, MaxLength, Min, Max, isString } from 'class-validator';
 
 export class CreatePokemonDto {
   @IsString()
@@ -19,79 +19,79 @@ export class CreatePokemonDto {
   @IsOptional()
   @IsString()
   @MaxLength(20)
-  teraType?: string;
+  tera_type?: string;
 
   @IsOptional()
   @IsInt()
   @Min(0)
   @Max(252)
-  evsHp?: number;
+  evs_hp?: number;
 
   @IsOptional()
   @IsInt()
   @Min(0)
   @Max(252)
-  evsAtk?: number;
+  evs_atk?: number;
 
   @IsOptional()
   @IsInt()
   @Min(0)
   @Max(252)
-  evsDef?: number;
+  evs_def?: number;
 
   @IsOptional()
   @IsInt()
   @Min(0)
   @Max(252)
-  evsSpa?: number;
+  evs_spa?: number;
 
   @IsOptional()
   @IsInt()
   @Min(0)
   @Max(252)
-  evsSpd?: number;
+  evs_spd?: number;
 
   @IsOptional()
   @IsInt()
   @Min(0)
   @Max(252)
-  evsSpe?: number;
+  evs_spe?: number;
 
   @IsOptional()
   @IsInt()
   @Min(0)
   @Max(31)
-  ivsHp?: number;
+  ivs_hp?: number;
 
   @IsOptional()
   @IsInt()
   @Min(0)
   @Max(31)
-  ivsAtk?: number;
+  ivs_atk?: number;
 
   @IsOptional()
   @IsInt()
   @Min(0)
   @Max(31)
-  ivsDef?: number;
+  ivs_def?: number;
 
   @IsOptional()
   @IsInt()
   @Min(0)
   @Max(31)
-  ivsSpa?: number;
+  ivs_spa?: number;
 
   @IsOptional()
   @IsInt()
   @Min(0)
   @Max(31)
-  ivsSpd?: number;
+  ivs_spd?: number;
 
   @IsOptional()
   @IsInt()
   @Min(0)
   @Max(31)
-  ivsSpe?: number;
+  ivs_spe?: number;
 
   @IsOptional()
   @IsString()
@@ -117,4 +117,24 @@ export class CreatePokemonDto {
   @IsString()
   @MaxLength(50)
   move4?: string;
+
+  @IsInt()
+  user_id: number;
+  
+  is_public: boolean;
+
+  @IsString()
+  spread_use?: string;
+
+  @IsString()
+  team_mates?: string;
+
+  @IsString()
+  calculos_principales?: string;
+
+  @IsString()
+  nick_poke?: string;
+
+  @IsString()
+  paste_sd?: string;
 }

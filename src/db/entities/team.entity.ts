@@ -1,7 +1,7 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
 
 @Entity()
-export class Team {
+export class Teams {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -19,4 +19,23 @@ export class Team {
 
   @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', name : 'date_created' })
   dateCreated: Date;
+
+  @Column({name: 'desc_uso'})
+  descUso?: string;
+
+  @Column({name: 'tournament_using'})
+  tournamentUsing?: string;
+
+  @Column({name: 'mus_fav'})
+  musFav?: string;
+
+  @Column({name: 'counters'})
+  counters?: string;
+
+  @Column({name: 'damage_calcs'})
+  damageCalcs?: string;
+
+  @Column({name: 'is_public', default: false})
+  isPublic: boolean;
+
 }

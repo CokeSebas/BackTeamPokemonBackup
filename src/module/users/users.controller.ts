@@ -21,7 +21,7 @@ export class UsersController {
 
     const salida = await this.usersResolver.create(createUserDto);
 
-    if(salida[0].status == 'succes'){
+    if(salida[0].status == 'success'){
       return res.status(salida[0].code).json({salida});
     }else{
       return res.status(salida[0].code).json({salida});
@@ -54,5 +54,16 @@ export class UsersController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.usersService.remove(+id);
+  }
+
+  @Post('/login')
+  async login(@Body() loginUserDto: CreateUserDto, @Res() res: Response): Promise<Object> {
+    this.logger.log('(C) Login user', UsersController.name);
+    const salida = await this.usersResolver.loginUser(loginUserDto);
+    if(salida[0].status == 'success'){
+      return res.status(salida[0].code).json(salida[0]);
+    }else{
+      return res.status(salida[0].code).json(salida[0]);
+    }
   }
 }

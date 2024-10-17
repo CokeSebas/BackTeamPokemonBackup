@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateTeamDto } from './dto/create-team.dto';
 import { UpdateTeamDto } from './dto/update-team.dto';
-import { Team } from 'src/db/entities/team.entity';
+import { Teams } from 'src/db/entities/team.entity';
 import { Repository } from 'typeorm';
 import { MyLoggerService } from '../common/logger/myLogger.service';
 
@@ -10,15 +10,16 @@ import { MyLoggerService } from '../common/logger/myLogger.service';
 export class TeamsService {
 
   constructor(
-    @InjectRepository(Team)
-    private readonly teamRepository: Repository<Team>,
+    @InjectRepository(Teams)
+    private readonly teamRepository: Repository<Teams>,
     private readonly logger: MyLoggerService
   ) {}
 
 
-  async create(createTeamDto: CreateTeamDto) {
+  async create(createTeamDto: Object) {
     this.logger.log('(S) Creating team: ', TeamsService.name);
-    const team = this.teamRepository.create(createTeamDto);
+    console.log(createTeamDto);
+    const team = await this.teamRepository.create(createTeamDto);
     return this.teamRepository.save(team);
   }
 

@@ -30,7 +30,7 @@ export class TeamsController {
   async findAll(@Res() res: Response) {
     this.logger.log('(C) Getting all teams', TeamsController.name);
     const salida = await this.teamsResolver.getAll();
-     return res.status(salida[0].code).json({salida});
+     return res.status(salida[0].code).json(salida[0]);
   }
 
   @Get(':id')

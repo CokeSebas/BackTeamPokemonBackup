@@ -3,7 +3,7 @@ import { PokemonService } from './pokemon.service';
 import { PokemonController } from './pokemon.controller';
 import { PokemonResolver } from './pokemon.resolver';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Pokemon } from 'src/db/entities/pokemon_build.entity';
+import { Pokemon } from 'src/db/entities/pokemon.entity';
 import { MyLoggerService } from '../common/logger/myLogger.service';
 
 @Module({

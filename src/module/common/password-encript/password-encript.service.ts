@@ -17,4 +17,8 @@ export class PasswordEncriptService {
 
     return hashedPassword;
   }
+
+  async comparePassword(password: string, hashedPassword: string): Promise<boolean> {
+    return await bcrypt.compare(password, hashedPassword);
+  }
 }

@@ -12,10 +12,24 @@ export class TeamsResolver {
   ){}
 
   async create(createTeamDto: CreateTeamDto): Promise<Object> {
-    this.logger.log('(C) Creating team', TeamsResolver.name)
+    this.logger.log('(R) Creating team', TeamsResolver.name)
     let salida = [];
 
-    const team = this.teamsService.create(createTeamDto);
+    const teamSave = {
+      teamName: createTeamDto.team_name,
+      urlPaste: createTeamDto.url_paste,
+      formatId: createTeamDto.format_id,
+      dateCreated: createTeamDto.date_created,
+      userId: createTeamDto.user_id,
+      descUso: createTeamDto.desc_uso,
+      tournamentUsing: createTeamDto.tournament_using,
+      musFav: createTeamDto.mus_fav,
+      counters: createTeamDto.counters,
+      damageCalcs: createTeamDto.damage_calcs,
+      isPublic: createTeamDto.is_public
+    }
+
+    const team = await this.teamsService.create(teamSave);
 
     if(team){
       salida = [{
@@ -49,15 +63,28 @@ export class TeamsResolver {
 
     let salida = [], datos = [];
 
-    teams.forEach(element => {
-      let aux = {
-        'team_name': element.teamName,
-        'url_paste': element.urlPaste,
-        'format_id': element.formatId,
-        'user_id': element.userId
+    teams.forEach((element, idx) => {
+
+      if(element.isPublic == true){
+        if(idx < 5){
+          let aux = {
+            'id': element.id,
+            'team_name': element.teamName,
+            'url_paste': element.urlPaste,
+            'format_id': element.formatId,
+            'desc_uso': element.descUso,
+            'tournament_using': element.tournamentUsing,
+            'mus_fav': element.musFav,
+            'counters': element.counters,
+            'damage_calcs': element.damageCalcs,
+            //'user_id': element.userId
+          }
+    
+          datos.push(aux);
+          idx++;
+        }
       }
 
-      datos.push(aux);
     });
 
     salida = [{

@@ -4,9 +4,7 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
-  OneToMany,
 } from 'typeorm';
-import { Team } from './team.entity' // Si tienes una entidad para los equipos (teams)
 
 @Entity('users')
 export class User {
@@ -46,4 +44,7 @@ export class User {
 
   @Column({ type: 'boolean', default: true, name: 'is_active' })
   isActive: boolean;
+
+  @Column({name: 'nick_name'})
+  nickName: string;
 }
