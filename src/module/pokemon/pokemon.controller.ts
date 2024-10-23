@@ -33,9 +33,25 @@ export class PokemonController {
     return res.status(salida[0].code).json({salida});
   }
 
+  @Get('pokes-home')
+  async getPokesHome(@Res() res: Response) {
+    this.logger.log('(C) Getting all pokemons: ', PokemonController.name);
+    const salida = await this.pokemonResolver.getPokesHome();
+    return res.status(salida[0].code).json(salida[0]);
+  }
+
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.pokemonService.findOne(+id);
+  async findOne(@Res() res: Response, @Param('id') id: string) {
+    this.logger.log('(C) Getting one pokemon: ', PokemonController.name);
+    const salida = await this.pokemonResolver.getPokemonById(+id);
+    return res.status(salida[0].code).json(salida[0].data);
+  }
+
+  @Get('pokes-user/:id')
+  async getPokesUser(@Res() res: Response, @Param('id') id: string) {
+    this.logger.log('(C) Getting all pokemons: ', PokemonController.name);
+    const salida = await this.pokemonResolver.pokemonsByUser(+id);
+    return res.status(salida[0].code).json(salida[0].data);
   }
 
   @Patch(':id')

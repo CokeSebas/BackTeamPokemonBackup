@@ -137,4 +137,7 @@ export class CreatePokemonDto {
 
   @IsString()
   paste_sd?: string;
+
+  @IsString()
+  url_image?: string;
 }

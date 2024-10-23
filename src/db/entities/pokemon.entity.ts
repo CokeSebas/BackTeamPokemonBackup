@@ -167,4 +167,7 @@ export class Pokemon {
   @Column({name: 'is_public', default: false})
   isPublic: boolean;
 
+  @Column({name: 'url_image'})
+  urlImage: string;
+
 }

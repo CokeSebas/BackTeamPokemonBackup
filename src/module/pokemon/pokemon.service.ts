@@ -31,6 +31,11 @@ export class PokemonService {
     return this.pokemonRepository.findOne({ where: { id } });
   }
 
+  async findPokesByUser(userId: number) {
+    this.logger.log('(S) Fetching pokemon by user: '+userId, PokemonService.name);
+    return this.pokemonRepository.find({ where: { userId } });
+  }
+
   update(id: number, updatePokemonDto: UpdatePokemonDto) {
     this.logger.log('(S) Updating pokemon: '+id, PokemonService.name);
     return this.pokemonRepository.update(id, updatePokemonDto);

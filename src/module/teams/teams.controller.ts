@@ -33,9 +33,26 @@ export class TeamsController {
      return res.status(salida[0].code).json(salida[0]);
   }
 
+  @Get('/teams-home')
+  async getTeamsHome(@Res() res: Response) {
+    this.logger.log('(C) Getting all teams', TeamsController.name);
+    const salida = await this.teamsResolver.getTeamsHome();
+    return res.status(salida[0].code).json(salida[0]);
+  }
+
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.teamsService.findOne(+id);
+  async findOne(@Res() res: Response, @Param('id') id: string) {
+    this.logger.log('(C) Getting team by id: '+id, TeamsController.name);
+    const salida = await this.teamsResolver.getTeamById(+id);
+    return res.status(salida[0].code).json(salida[0]);
+    //return this.teamsService.findOne(+id);
+  }
+
+  @Get('/teams-user/:id')
+  async getTeamsByUser(@Res() res: Response, @Param('id') id: string) {
+    this.logger.log('(C) Getting teams by user: '+id, TeamsController.name);
+    const salida = await this.teamsResolver.getTeamsByUser(+id);
+    return res.status(salida[0].code).json(salida[0]);
   }
 
   @Post('/edit/:id')

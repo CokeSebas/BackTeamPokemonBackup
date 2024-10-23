@@ -33,6 +33,11 @@ export class TeamsService {
     return this.teamRepository.findOne({ where: { id } });
   }
 
+  async findTeamsByUser(userId: number) {
+    this.logger.log('(S) Getting teams by user id: '+userId, TeamsService.name);
+    return this.teamRepository.find({ where: { userId } });
+  }
+
   //async findByUserId(id: number) {
   //  this.logger.log('(S) Getting team by user id: '+id, TeamsService.name);
   //  return this.teamRepository.findOne({ where: { user: id } });

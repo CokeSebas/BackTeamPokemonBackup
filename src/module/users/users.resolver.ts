@@ -31,7 +31,7 @@ export class UsersResolver {
         {
           message: 'El usuario ya existe',
           status: 'error',
-          code: 500
+          code: 202
         }
       ];
     }else{
@@ -44,14 +44,24 @@ export class UsersResolver {
       }
 
       createUserDto.passwordHash = hashedPassword;
+      createUserDto.isActive = true;
         
       // Crear un nuevo usuario
-      const user = this.usersService.create(createUserDto);
+      const user = await this.usersService.create(createUserDto);
+
+      console.log(user);
+
+      //return null;
+
+      const token = await this.jwtTokenService.createToken(user.id);
 
       salida = [{
         message: 'Usuario creado correctamente',
         status: 'success',
-        code: 200
+        code: 200,
+        data: {
+          'token': token
+        }
       }];
     }
     return salida;
@@ -97,6 +107,7 @@ export class UsersResolver {
         'lastName': user.lastName,
         'email': user.email,
         'avatarUrl': user.avatarUrl,
+        'nickName': user.nickName
       };
 
       salida = [{
