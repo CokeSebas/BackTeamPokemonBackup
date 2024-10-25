@@ -18,7 +18,6 @@ export class TeamsService {
 
   async create(createTeamDto: Object) {
     this.logger.log('(S) Creating team: ', TeamsService.name);
-    console.log(createTeamDto);
     const team = await this.teamRepository.create(createTeamDto);
     return this.teamRepository.save(team);
   }
@@ -37,11 +36,6 @@ export class TeamsService {
     this.logger.log('(S) Getting teams by user id: '+userId, TeamsService.name);
     return this.teamRepository.find({ where: { userId } });
   }
-
-  //async findByUserId(id: number) {
-  //  this.logger.log('(S) Getting team by user id: '+id, TeamsService.name);
-  //  return this.teamRepository.findOne({ where: { user: id } });
-  //}
 
   async findOneByName(name: string) {
     this.logger.log('(S) Getting team by name: '+name, TeamsService.name);

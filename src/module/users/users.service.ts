@@ -43,6 +43,16 @@ export class UsersService {
     return this.userRepository.update(id, updateUserDto);
   }
 
+  async updatePassword(user: User) {
+    this.logger.log('(S) Updating user password: '+user.id, UsersService.name);
+    return this.userRepository.save(user);
+  }
+
+  async verifyEmailUser(user: User) {
+    this.logger.log('(S) Verifying user email: '+user.id, UsersService.name);
+    return this.userRepository.save(user);
+  }
+
   remove(id: number) {
     return `This action removes a #${id} user`;
   }

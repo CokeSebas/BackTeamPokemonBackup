@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Res } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Res, Headers } from '@nestjs/common';
 import { Response } from 'express';
 import { PokemonService } from './pokemon.service';
 import { CreatePokemonDto } from './dto/create-pokemon.dto';
@@ -47,18 +47,29 @@ export class PokemonController {
     return res.status(salida[0].code).json(salida[0].data);
   }
 
+  @Get('poke-user/:id')
+  async getPokeByUser(@Res() res: Response, @Param('id') id: string, @Headers('authorization') token: string) {
+    this.logger.log('(C) Getting pokemon user: ', PokemonController.name);
+    const salida = await this.pokemonResolver.pokemonByUser(+id, token);
+    return res.status(salida[0].code).json(salida[0]);
+  }
+
   @Get('pokes-user/:id')
   async getPokesUser(@Res() res: Response, @Param('id') id: string) {
-    this.logger.log('(C) Getting all pokemons: ', PokemonController.name);
+    this.logger.log('(C) Getting all pokemons by user: ', PokemonController.name);
     const salida = await this.pokemonResolver.pokemonsByUser(+id);
+    return res.status(salida[0].code).json(salida[0]);
+  }
+
+  @Post('edit/:id')
+  async update(@Param('id') id: string, @Body() updatePokemonDto: UpdatePokemonDto, @Res() res: Response) {
+    this.logger.log('(C) Updating pokemon: '+id, PokemonController.name);
+    const salida = await this.pokemonResolver.editPokemon(+id, updatePokemonDto);
     return res.status(salida[0].code).json(salida[0].data);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePokemonDto: UpdatePokemonDto) {
-    return this.pokemonService.update(+id, updatePokemonDto);
-  }
 
+  
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.pokemonService.remove(+id);

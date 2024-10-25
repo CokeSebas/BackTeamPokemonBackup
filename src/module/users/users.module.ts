@@ -8,6 +8,7 @@ import { PasswordEncriptService } from '../common/password-encript/password-encr
 import { UsersResolver } from './users.resolver';
 import { JwtTokenService } from '../common/jwt-token/jwt-token.service';
 import { JwtModule } from '@nestjs/jwt';
+import { MailService } from '../common/mail/mail.service';
 
 @Module({
   imports: [
@@ -18,7 +19,7 @@ import { JwtModule } from '@nestjs/jwt';
     }),
   ],
   controllers: [UsersController],
-  providers: [UsersService, MyLoggerService, PasswordEncriptService, UsersResolver, JwtTokenService],
+  providers: [UsersService, MyLoggerService, PasswordEncriptService, UsersResolver, JwtTokenService, MailService],
   exports: [UsersResolver],
 })
 export class UsersModule {}

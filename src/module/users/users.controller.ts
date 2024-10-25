@@ -1,10 +1,11 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Res } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Res, Query } from '@nestjs/common';
 import { Response } from 'express';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { MyLoggerService } from '../common/logger/myLogger.service';
 import { UsersResolver } from './users.resolver';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Controller('users')
 export class UsersController {
@@ -26,6 +27,13 @@ export class UsersController {
     }else{
       return res.status(salida[0].code).json({salida});
     }
+  }
+
+  @Get('/verify-account')
+  async verifyAccount(@Query('token') token: string, @Res() res) {
+    this.logger.log('(C) Verifying account', UsersController.name);
+    const salida = await this.usersResolver.verifyEmail(token);
+    return res.status(salida[0].code).json({salida});
   }
 
   @Get()
@@ -51,6 +59,13 @@ export class UsersController {
     return res.status(salida[0].code).json({salida});
   }
 
+  @Post('/edit/password/:id')
+  async updatePassword(@Param('id') id: number, @Body() changePasswordDto: ChangePasswordDto, @Res() res: Response): Promise<Object> {
+    this.logger.log('(C) Updating password '+id, UsersController.name);
+    const salida = await this.usersResolver.changePassword(id, changePasswordDto);
+    return res.status(salida[0].code).json({salida});
+  }
+
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.usersService.remove(+id);
@@ -60,6 +75,28 @@ export class UsersController {
   async login(@Body() loginUserDto: CreateUserDto, @Res() res: Response): Promise<Object> {
     this.logger.log('(C) Login user', UsersController.name);
     const salida = await this.usersResolver.loginUser(loginUserDto);
+    if(salida[0].status == 'success'){
+      return res.status(salida[0].code).json(salida[0]);
+    }else{
+      return res.status(salida[0].code).json(salida[0]);
+    }
+  }
+
+  @Post('/forgot-password')
+  async forgotPassword(@Body() email : string, @Res() res: Response): Promise<Object> {
+    this.logger.log('(C) Forgot password', UsersController.name);
+    const salida = await this.usersResolver.forgotPassword(email);
+    if(salida[0].status == 'success'){
+      return res.status(salida[0].code).json(salida[0]);
+    }else{
+      return res.status(salida[0].code).json(salida[0]);
+    }
+  }
+
+  @Post('/reset-password')
+  async resetPassword(@Body() resetPasswordDto : any, @Res() res: Response): Promise<Object> {
+    this.logger.log('(C) Reset password', UsersController.name);
+    const salida = await this.usersResolver.resetPassword(resetPasswordDto);
     if(salida[0].status == 'success'){
       return res.status(salida[0].code).json(salida[0]);
     }else{

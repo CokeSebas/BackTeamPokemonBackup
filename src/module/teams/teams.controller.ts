@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Res } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Res, Headers } from '@nestjs/common';
 import { Response } from 'express';
 import { TeamsService } from './teams.service';
 import { CreateTeamDto } from './dto/create-team.dto';
@@ -48,6 +48,13 @@ export class TeamsController {
     //return this.teamsService.findOne(+id);
   }
 
+  @Get('team-user/:id')
+  async getTeamByUser(@Res() res: Response, @Param('id') id: string, @Headers('authorization') token: string) {
+    this.logger.log('(C) Getting user team by team id: '+id, TeamsController.name);
+    const salida = await this.teamsResolver.getUserTeam(+id, token);
+    return res.status(salida[0].code).json(salida[0]);
+  }
+
   @Get('/teams-user/:id')
   async getTeamsByUser(@Res() res: Response, @Param('id') id: string) {
     this.logger.log('(C) Getting teams by user: '+id, TeamsController.name);
@@ -56,10 +63,11 @@ export class TeamsController {
   }
 
   @Post('/edit/:id')
-  update(@Param('id') id: string, @Body() updateTeamDto: UpdateTeamDto) {
-    return this.teamsService.update(+id, updateTeamDto);
+  async editTeam(@Res() res: Response, @Param('id') id: string, @Body() updateTeamDto: UpdateTeamDto) {
+    this.logger.log('(C) Edit team: '+id, TeamsController.name);
+    const salida = await this.teamsResolver.editTeam(+id, updateTeamDto);
+    return res.status(salida[0].code).json(salida[0].data);
   }
-
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.teamsService.remove(+id);

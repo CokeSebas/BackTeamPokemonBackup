@@ -5,6 +5,8 @@ import { CreateTeamDto } from "./dto/create-team.dto";
 import { lastValueFrom } from 'rxjs';
 import { HttpService } from "@nestjs/axios";
 import { ImageValidatorService } from "../common/img-validator/img-validator.service";
+import { JwtTokenService } from "../common/jwt-token/jwt-token.service";
+import { UpdateTeamDto } from "./dto/update-team.dto";
 
 @Injectable()
 export class TeamsResolver {
@@ -13,7 +15,8 @@ export class TeamsResolver {
     private readonly teamsService: TeamsService,
     private readonly logger: MyLoggerService,
     private readonly httpService: HttpService,
-    private readonly imgValidatorService: ImageValidatorService
+    private readonly imgValidatorService: ImageValidatorService,
+    private readonly jwtTokenService: JwtTokenService
   ){}
 
   async create(createTeamDto: CreateTeamDto): Promise<Object> {
@@ -50,16 +53,6 @@ export class TeamsResolver {
       }];
     }
     return salida;
-  }
-
-  async editTeam(id: number, updateTeamDto: CreateTeamDto): Promise<Object> {
-    this.logger.log('(U) Editing team: '+id, TeamsResolver.name);
-    let team = await this.teamsService.findOne(id);
-
-    if(team){
-      return this.teamsService.update(id, updateTeamDto);
-    }
-    return null;
   }
 
   async getAll(){
@@ -148,8 +141,6 @@ export class TeamsResolver {
   
     if(team){
       const teamJson = await this.getTeamJson(team.urlPaste+'/json');
-      //console.log(teamJson.paste);
-
       // Separar los bloques de información para cada Pokémon
       const pokemonBlocks = teamJson.paste.trim().split(/\n\s*(?=[^\n]+ @ )/);
 
@@ -157,29 +148,22 @@ export class TeamsResolver {
       const pokemonArray = await Promise.all(pokemonBlocks.map(async block => {
           const lines = block.split('\n');
 
-          // Extraer el nombre y la especie, ignorando el género
+          // Extraer el nombre y la especie
           const [nameSpecies, item] = lines[0].split(' @ ');
-
-          // Ajustar la expresión regular para capturar solo el nombre y la especie
-          const nicknameMatch = nameSpecies.match(/(.+?)(?: \([MF]\))?$/); // Captura el nombre y opcionalmente el género
-
           let nickname, species;
 
+          let speciesName = nameSpecies.replace('(M)','');
+          speciesName = speciesName.replace('(F)','');
+
+          // Verificar si hay un apodo (nickname) o no
+          const nicknameMatch = speciesName.match(/(.+?) \((.+)\)/);
           if (nicknameMatch) {
-              // Si hay un apodo y/o género
-              nickname = nicknameMatch[1].trim(); // Extrae el nombre del Pokémon (con apodo si existe)
-              
-              // La especie se puede deducir de la línea original, quitando el apodo
-              species = nameSpecies.replace(nickname, '').replace(/ *\([MF]\)$/, '').trim(); // Obtener solo la especie
+              // Si hay un apodo
+              [nickname, species] = nicknameMatch.slice(1, 3);
           } else {
-              // Si no hay apodo
+              // Si no hay apodo, tomar directamente la especie
               nickname = null; // No tiene apodo
               species = nameSpecies;
-          }
-
-          // Asegurarse de que species no esté vacío
-          if (!species) {
-              species = nameSpecies; // Asigna species al nombre completo si no se extrajo correctamente
           }
 
           // Extraer la habilidad
@@ -235,7 +219,7 @@ export class TeamsResolver {
           // Crear el objeto con la información extraída
           return {
               nickname,
-              species: species || nameSpecies, // Asignar species como nameSpecies si es necesario
+              species,
               pokeImg,
               item,
               ability,
@@ -248,8 +232,6 @@ export class TeamsResolver {
               moves
           };
       }));
-
-
 
             
       data = {
@@ -280,6 +262,155 @@ export class TeamsResolver {
         code: 404
       }];
     }
+    return salida;
+  }
+
+  async getUserTeam(id: number, token: string){
+    this.logger.log('(R) Getting user team: '+id, TeamsResolver.name);
+
+    let salida = [], data = {};
+
+    let team = await this.teamsService.findOne(id);
+
+    const tokerUser = token.split(' ')[1];    
+    const idUser = await this.jwtTokenService.decodeToken(tokerUser);
+
+    if(team.userId == idUser.userId){
+      if(team){
+        const teamJson = await this.getTeamJson(team.urlPaste+'/json');
+
+        // Separar los bloques de información para cada Pokémon
+        const pokemonBlocks = teamJson.paste.trim().split(/\n\s*(?=[^\n]+ @ )/);
+
+        // Procesar cada bloque para extraer los detalles del Pokémon
+        const pokemonArray = await Promise.all(pokemonBlocks.map(async block => {
+            const lines = block.split('\n');
+
+            // Extraer el nombre y la especie
+            const [nameSpecies, item] = lines[0].split(' @ ');
+            let nickname, species;
+
+            let speciesName = nameSpecies.replace('(M)','');
+            speciesName = speciesName.replace('(F)','');
+
+            // Verificar si hay un apodo (nickname) o no
+            const nicknameMatch = speciesName.match(/(.+?) \((.+)\)/);
+            if (nicknameMatch) {
+                // Si hay un apodo
+                [nickname, species] = nicknameMatch.slice(1, 3);
+            } else {
+                // Si no hay apodo, tomar directamente la especie
+                nickname = null; // No tiene apodo
+                species = nameSpecies;
+            }
+
+            // Extraer la habilidad
+            const ability = lines[1].replace('Ability: ', '');
+
+            // Extraer el nivel
+            const level = parseInt(lines[2].replace('Level: ', ''), 10);
+            
+            // Inicializar variable shiny
+            let shiny = false;
+
+            // Verificar si la línea "Shiny" está presente
+            const shinyIndex = lines.findIndex(line => line.startsWith('Shiny:'));
+            if (shinyIndex !== -1) {
+                const shinyLine = lines[shinyIndex].replace('Shiny: ', '').trim();
+                shiny = shinyLine.toLowerCase() === 'yes'; // Convertir a booleano
+            }
+
+            // Extraer el tipo Tera
+            const teraTypeIndex = shinyIndex !== -1 ? shinyIndex + 1 : 3; // Ajustar índice si hay línea Shiny
+            const teraType = lines[teraTypeIndex].replace('Tera Type: ', '');
+
+            // Extraer los EVs
+            const evsIndex = shinyIndex !== -1 ? shinyIndex + 2 : 4; // Ajustar índice si hay línea Shiny
+            const evs = lines[evsIndex].replace('EVs: ', '');
+
+            // Extraer la naturaleza
+            const natureIndex = shinyIndex !== -1 ? shinyIndex + 3 : 5; // Ajustar índice si hay línea Shiny
+            const nature = lines[natureIndex].replace(' Nature', '');
+
+            // Extraer los IVs si están presentes
+            const ivsLineIndex = shinyIndex !== -1 ? shinyIndex + 4 : 6; // Ajustar índice si hay línea Shiny
+            const ivsLine = lines[ivsLineIndex] && lines[ivsLineIndex].startsWith('IVs: ') ? lines[ivsLineIndex].replace('IVs: ', '') : null;
+
+            // Extraer los movimientos
+            const movesStartIndex = ivsLine ? (shinyIndex !== -1 ? shinyIndex + 5 : 7) : (shinyIndex !== -1 ? shinyIndex + 4 : 6);
+            const moves = lines.slice(movesStartIndex).map(line => line.replace('- ', '').trim());
+
+            let pokeImg = '';
+
+            let imgName = species.trim().toLowerCase();
+            imgName = imgName.replace('(m)', '');
+            imgName = imgName.replace('(f)', '');
+            imgName = imgName.trim();
+
+            // Comprobar si la imagen existe en las diferentes URLs
+            if (await this.imgValidatorService.checkImageExists('https://play.pokemonshowdown.com/sprites/gen5/' + imgName + '.png')) {
+                pokeImg = 'https://play.pokemonshowdown.com/sprites/gen5/' + imgName + '.png';
+            } else if (await this.imgValidatorService.checkImageExists('https://play.pokemonshowdown.com/sprites/dex/' + imgName.replace('-', '') + '.png')) {
+                pokeImg = 'https://play.pokemonshowdown.com/sprites/dex/' + imgName.replace('-', '') + '.png';
+            }
+            
+            // Crear el objeto con la información extraída
+            return {
+                nickname,
+                species,
+                pokeImg,
+                item,
+                ability,
+                level,
+                shiny, // Agregar la propiedad shiny
+                teraType,
+                evs,
+                nature,
+                ivs: ivsLine,
+                moves
+            };
+        }));
+
+              
+        data = {
+          'team_name': team.teamName,
+          'url_paste': team.urlPaste,
+          'url_json': team.urlPaste+'/json',
+          'pokemons': pokemonArray,
+          'desc_uso': team.descUso,
+          'tournament_using': team.tournamentUsing,
+          'mus_fav': team.musFav,
+          'counters': team.counters,
+          'damage_calcs': team.damageCalcs,
+          'is_public': team.isPublic,
+          'format_id': team.formatId,
+          'user_id': team.userId
+        }
+    
+        salida = [{
+          data: data,
+          message: 'Team obtained correctly',
+          status: 'success',
+          code: 200
+        }];
+      }else{
+        salida = [{
+          message: 'Team not found',
+          status: 'error',
+          code: 404
+        }];
+      }
+    }else{
+      salida = [{
+        data: null,
+        message: 'Usuario no es dueño del team',
+        status: 'error',
+        code: 201
+      }];
+    }
+
+    //verificar user id con el obtenido en el token, o en la query, verificar el quipo mediante id del teamm e id del usuario, aplicar lo mismo para los teams y en modulo pokes
+    
     return salida;
   }
 
@@ -327,6 +458,62 @@ export class TeamsResolver {
     } catch (error) {
         throw new Error('Error al obtener los datos del equipo de Pokémon');
     }
+  }
+
+  async editTeam(id: number, updateTeamDto: UpdateTeamDto): Promise<Object> {
+    this.logger.log('(R) Edit team: '+id, TeamsResolver.name);
+
+    let salida = [], data = {};
+
+    const teamExist = await this.teamsService.findOne(id);
+
+    if(teamExist){
+
+      const teamUpdate = {
+        teamName: updateTeamDto.team_name,
+        urlPaste: updateTeamDto.url_paste,
+        formatId: updateTeamDto.format_id,
+        dateCreated: updateTeamDto.date_created,
+        userId: updateTeamDto.user_id,
+        descUso: updateTeamDto.desc_uso,
+        tournamentUsing: updateTeamDto.tournament_using,
+        musFav: updateTeamDto.mus_fav,
+        counters: updateTeamDto.counters,
+        damageCalcs: updateTeamDto.damage_calcs,
+        isPublic: updateTeamDto.is_public
+      }
+
+      const team = await this.teamsService.update(id, teamUpdate);
+
+      if(team.affected === 1){
+        data = {
+          message: 'Team edited correctly',
+          status: 'success',
+          code: 200
+        };
+
+        salida = [{
+          data: data,
+          message: 'Team edited correctly',
+          status: 'success',
+          code: 200
+        }]
+      }else{
+        salida = [{
+          message: 'Team not edited',
+          status: 'error',
+          code: 201 
+        }];
+      }
+    }else{
+      salida = [{
+        message: 'Team not found',
+        status: 'error',
+        code: 404 
+      }];
+    }
+
+    return salida;
   }
     
   //async getTeamsByUser(id: number){

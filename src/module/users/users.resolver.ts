@@ -2,9 +2,11 @@ import { MyLoggerService } from "../common/logger/myLogger.service";
 import { PasswordEncriptService } from "../common/password-encript/password-encript.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UsersService } from "./users.service";
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { JwtTokenService } from "../common/jwt-token/jwt-token.service";
+import { ChangePasswordDto } from "./dto/change-password.dto";
+import { MailService } from "../common/mail/mail.service";
 
 @Injectable()
 export class UsersResolver {
@@ -12,7 +14,8 @@ export class UsersResolver {
       private readonly usersService: UsersService,
       private readonly logger: MyLoggerService,
       private readonly passwordEncriptService: PasswordEncriptService,
-      private readonly jwtTokenService: JwtTokenService
+      private readonly jwtTokenService: JwtTokenService,
+      private readonly mailService: MailService
   ){}
 
   async create(createUserDto: CreateUserDto): Promise<Object> {
@@ -44,16 +47,18 @@ export class UsersResolver {
       }
 
       createUserDto.passwordHash = hashedPassword;
-      createUserDto.isActive = true;
+      createUserDto.isActive = false; // desactivar
         
       // Crear un nuevo usuario
       const user = await this.usersService.create(createUserDto);
 
-      console.log(user);
+      const token = await this.jwtTokenService.createToken('userId', user.id);
 
-      //return null;
+      // Genera un token de verificación
+      const tokenMail = await this.jwtTokenService.createToken('email', email);
 
-      const token = await this.jwtTokenService.createToken(user.id);
+      // Enviar correo de verificación
+      await this.mailService.sendVerificationEmail(email, tokenMail);
 
       salida = [{
         message: 'Usuario creado correctamente',
@@ -64,6 +69,45 @@ export class UsersResolver {
         }
       }];
     }
+    return salida;
+  }
+
+  async verifyEmail(token: string): Promise<Object> {
+    this.logger.log('(R) Verify email: ', UsersResolver.name);
+
+    let tokenData = await this.jwtTokenService.validateToken(token);
+
+    const email = tokenData.email;
+
+    const user = await this.usersService.findOneByEmail(email);
+    if (!user) {
+      throw new Error('Usuario no encontrado');
+    }
+
+    user.isActive = true;
+
+    await this.usersService.verifyEmailUser(user);
+
+    const tokenId = await this.jwtTokenService.createToken('userId',user.id);
+
+    const data = {
+      'user': user,
+      'name': user.name,
+      'lastName': user.lastName,
+      'email': user.email,
+      'avatarUrl': user.avatarUrl,
+      'token': tokenId,
+      'nickName': user.nickName,
+      'id': user.id
+    };
+
+    let salida = [{
+      data: data,
+      message: 'Email verificado correctamente',
+      status: 'success',
+      code: 200,
+    }];
+
     return salida;
   }
 
@@ -102,20 +146,38 @@ export class UsersResolver {
     let salida = [], data = {};
 
     if(user){
-      data = {
-        'name': user.name,
-        'lastName': user.lastName,
-        'email': user.email,
-        'avatarUrl': user.avatarUrl,
-        'nickName': user.nickName
-      };
+      let avatarUrl = '';
 
-      salida = [{
-        data: data,
-        message: 'Usuario obtenido correctamente',
-        status: 'success',
-        code: 200,
-      }]
+      if(user.isActive == true){
+        if(user.avatarUrl != ''){
+          avatarUrl = user.avatarUrl;
+        }else{
+          avatarUrl = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png';
+        }
+        
+        data = {
+          'name': user.name,
+          'lastName': user.lastName,
+          'email': user.email,
+          'avatarUrl': avatarUrl,
+          'nickName': user.nickName
+        };
+  
+        salida = [{
+          data: data,
+          message: 'Usuario obtenido correctamente',
+          status: 'success',
+          code: 200,
+        }]
+      }else{
+        salida = [{
+          data: data,
+          message: 'Usuario no activado',
+          status: 'error',
+          code: 404
+        }];
+      }
+
     }else{
       salida = [{
         message: 'Usuario no encontrado',
@@ -173,6 +235,52 @@ export class UsersResolver {
     return salida;
   }
 
+  async changePassword(id: number, changePasswordDto: ChangePasswordDto): Promise<Object> {
+    this.logger.log('(R) Change password: '+id, UsersResolver.name);
+    const user =  await this.usersService.findOne(id);
+
+    let salida = [], data = {};
+
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+
+    const isMatch = await this.passwordEncriptService.comparePassword(changePasswordDto.currentPassword, user.passwordHash);
+
+    if (!isMatch) {
+      throw new UnauthorizedException('La contraseña actual es incorrecta');
+    }
+
+    user.passwordHash = await this.passwordEncriptService.encriptPassword(changePasswordDto.newPassword); // Hash de la nueva contraseña
+    
+    const updatedUser = await this.usersService.updatePassword(user);
+
+    if(updatedUser){
+      data = {
+        'name': user.name,
+        'lastName': user.lastName,
+        'email': user.email,
+        'avatarUrl': user.avatarUrl,
+      };
+
+      salida = [{
+        data: data,
+        message: 'Contraseña cambiada correctamente',
+        status: 'success',
+        code: 200,
+      }];
+
+    }else{
+      salida = [{
+        message: 'Hubo un error al cambiar la contraseña',
+        status: 'error',
+        code: 202,
+      }];
+    }
+
+    return salida;
+  }
+
   async loginUser(loginUserDto: CreateUserDto): Promise<Object> {
     this.logger.log('(R) Login user: ', UsersResolver.name);
 
@@ -182,11 +290,22 @@ export class UsersResolver {
 
     const user = await this.usersService.findOneByEmail(email);
 
-    if (!user) {
+    if(!user) {
       this.logger.error('El usuario no existe', UsersResolver.name);
       
       salida = [{
         message: 'El usuario no existe',
+        status: 'error',
+        code: 404
+      }];
+
+      return salida;
+    }
+
+    if(!user.isActive){
+      this.logger.error('Usuario no activado', UsersResolver.name);
+      salida = [{
+        message: 'Usuario no activado',
         status: 'error',
         code: 404
       }];
@@ -210,14 +329,16 @@ export class UsersResolver {
       return salida;
     }
 
-    const token = await this.jwtTokenService.createToken(user.id);
+    const token = await this.jwtTokenService.createToken('userId',user.id);
 
     data = {
       'name': user.name,
       'lastName': user.lastName,
       'email': user.email,
       'avatarUrl': user.avatarUrl,
-      'token': token
+      'token': token,
+      'nickName': user.nickName,
+      'id': user.id
     };
 
     salida = [{ 
@@ -229,4 +350,69 @@ export class UsersResolver {
 
     return salida;    
   }
+
+  async forgotPassword(email : string): Promise<Object> {
+    this.logger.log('(R) Forgot password: ', UsersResolver.name);
+    // Genera un token de verificación
+    const tokenMail = await this.jwtTokenService.createToken('email', email['email']);
+
+    // Enviar correo de verificación
+    await this.mailService.sendResetPasswordEmail(email['email'], tokenMail);
+
+    const salida = [{
+      message: 'Se envio un correo de verificación',
+      status: 'success',
+      code: 200
+    }];
+
+    return salida;
+  }
+
+
+  async resetPassword(resetPasswordDto: any): Promise<Object> {
+    this.logger.log('(R) Reset password: ', UsersResolver.name);
+    const token = resetPasswordDto.token;
+
+    const newPassword = resetPasswordDto.newPassword;
+
+    const decoded = await this.jwtTokenService.decodeToken(token);
+
+    const user = await this.usersService.findOneByEmail(decoded.email);
+
+    let salida = [], data = {};
+
+    if(!user) {
+      this.logger.error('El usuario no existe', UsersResolver.name);
+
+      salida = [{
+        message: 'El usuario no existe',
+        status: 'error',
+        code: 404
+      }];
+
+      return salida;
+    }
+
+    const hashedPassword = await this.passwordEncriptService.encriptPassword(newPassword);
+
+    user.passwordHash = hashedPassword;
+
+    await this.usersService.updatePassword(user);
+
+    data = {
+      'name': user.name,
+    };
+
+    salida = [{
+      data: data,
+      message: 'Contraseña cambiada correctamente',
+      status: 'success',
+      code: 200,
+    }];
+
+    return salida;
+  }
+
+
+
 }

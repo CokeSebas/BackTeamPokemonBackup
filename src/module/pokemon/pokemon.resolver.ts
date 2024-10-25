@@ -4,6 +4,7 @@ import { MyLoggerService } from "../common/logger/myLogger.service";
 import { CreatePokemonDto } from "./dto/create-pokemon.dto";
 import { UpdatePokemonDto } from "./dto/update-pokemon.dto";
 import { ImageValidatorService } from "../common/img-validator/img-validator.service";
+import { JwtTokenService } from "../common/jwt-token/jwt-token.service";
 
 @Injectable()
 export class PokemonResolver {
@@ -11,7 +12,8 @@ export class PokemonResolver {
   constructor(
     private readonly pokemonService: PokemonService,
     private readonly logger: MyLoggerService,
-    private readonly imgValidatorService: ImageValidatorService
+    private readonly imgValidatorService: ImageValidatorService,
+     private readonly jwtTokenService: JwtTokenService
   ) {}
 
   async create(createPokemonDto: CreatePokemonDto): Promise<Object> {
@@ -212,8 +214,6 @@ export class PokemonResolver {
       if (element.isPublic == true) {
         if(idx < 6) {
 
-          
-
           let aux = {
             'name': element.name,
             'item': element.item,
@@ -247,14 +247,19 @@ export class PokemonResolver {
     let salida = [], data = [];
 
     if (pokemon) {
-
+  
       const evs = pokemon.evsHp +' HP / ' + pokemon.evsAtk + ' Atk / ' + pokemon.evsDef + ' Def / ' + pokemon.evsSpa+ ' SpA / ' + pokemon.evsSpd+ ' SpD / ' + pokemon.evsSpe+ ' Spe';
       const ivs = pokemon.ivsHp +' HP / ' + pokemon.ivsAtk + ' Atk / ' + pokemon.ivsDef + ' Def / ' + pokemon.ivsSpa+ ' SpA / ' + pokemon.ivsSpd+ ' SpD / ' + pokemon.ivsSpe+ ' Spe';
 
       const moves = [pokemon.move1, pokemon.move2, pokemon.move3, pokemon.move4];
 
+      let namePoke = pokemon.name;
+      if(pokemon.nickPoke != pokemon.name){ 
+        namePoke = pokemon.nickPoke +' (' + pokemon.name + ')';
+      }
+
       const pasteSd = `
-        ${pokemon.name} @ ${pokemon.item}
+        ${namePoke} @ ${pokemon.item}
         Ability: ${pokemon.ability}
         Tera Type: ${pokemon.teraType}
         EVs: ${pokemon.evsHp} HP / ${pokemon.evsAtk} Atk / ${pokemon.evsDef} Def / ${pokemon.evsSpa} SpA / ${pokemon.evsSpd} SpD / ${pokemon.evsSpe} Spe
@@ -268,6 +273,7 @@ export class PokemonResolver {
       let aux = {
         'id': pokemon.id,
         'name': pokemon.name,
+        'namePoke': namePoke,
         'item': pokemon.item,
         'ability': pokemon.ability,
         'teraType': pokemon.teraType,
@@ -309,6 +315,98 @@ export class PokemonResolver {
       code: 200,
       data: data
     }];
+
+    return salida;
+  }
+
+  async pokemonByUser(id: number, token: string) {
+    this.logger.log('(R) Pokemon by user: ', PokemonResolver.name);
+
+    let pokemon = await this.pokemonService.findOne(id);
+    let salida = [], data = [];
+
+    const tokerUser = token.split(' ')[1];    
+    const idUser = await this.jwtTokenService.decodeToken(tokerUser);
+
+    if(pokemon.userId == idUser.userId){
+      if (pokemon) {
+  
+        const evs = pokemon.evsHp +' HP / ' + pokemon.evsAtk + ' Atk / ' + pokemon.evsDef + ' Def / ' + pokemon.evsSpa+ ' SpA / ' + pokemon.evsSpd+ ' SpD / ' + pokemon.evsSpe+ ' Spe';
+        const ivs = pokemon.ivsHp +' HP / ' + pokemon.ivsAtk + ' Atk / ' + pokemon.ivsDef + ' Def / ' + pokemon.ivsSpa+ ' SpA / ' + pokemon.ivsSpd+ ' SpD / ' + pokemon.ivsSpe+ ' Spe';
+  
+        const moves = [pokemon.move1, pokemon.move2, pokemon.move3, pokemon.move4];
+
+        let namePoke = pokemon.name;
+        if(pokemon.nickPoke != pokemon.name){ 
+          namePoke = pokemon.nickPoke +' (' + pokemon.name + ')';
+        }
+  
+        const pasteSd = `
+          ${namePoke} @ ${pokemon.item}
+          Ability: ${pokemon.ability}
+          Tera Type: ${pokemon.teraType}
+          EVs: ${pokemon.evsHp} HP / ${pokemon.evsAtk} Atk / ${pokemon.evsDef} Def / ${pokemon.evsSpa} SpA / ${pokemon.evsSpd} SpD / ${pokemon.evsSpe} Spe
+          ${pokemon.nature} Nature
+          - ${pokemon.move1}
+          - ${pokemon.move2}
+          - ${pokemon.move3}
+          - ${pokemon.move4}
+          `;
+  
+        let aux = {
+          'id': pokemon.id,
+          'name': pokemon.name,
+          'namePoke': namePoke,
+          'item': pokemon.item,
+          'ability': pokemon.ability,
+          'teraType': pokemon.teraType,
+          'evsHp': pokemon.evsHp,
+          'evsAtk': pokemon.evsAtk,
+          'evsDef': pokemon.evsDef,
+          'evsSpa': pokemon.evsSpa,
+          'evsSpd': pokemon.evsSpd,
+          'evsSpe': pokemon.evsSpe,
+          'ivsHp': pokemon.ivsHp,
+          'ivsAtk': pokemon.ivsAtk,
+          'ivsDef': pokemon.ivsDef,
+          'ivsSpa': pokemon.ivsSpa,
+          'ivsSpd': pokemon.ivsSpd,
+          'ivsSpe': pokemon.ivsSpe,
+          'nature': pokemon.nature,
+          'move1': pokemon.move1,
+          'move2': pokemon.move2,
+          'move3': pokemon.move3,
+          'move4': pokemon.move4,
+          'evs': evs,
+          'ivs': ivs,
+          'moves': moves,
+          'urlImage': pokemon.urlImage,
+          'isPublic': pokemon.isPublic,
+          'spreadUse': pokemon.spreadUse,
+          'teamMates': pokemon.teamMates,
+          'calculosPrincipales': pokemon.calculosPrincipales,
+          'nickPoke': pokemon.nickPoke,
+          'pasteSd': pasteSd
+        };
+  
+        data.push(aux);
+      }
+  
+      salida = [{
+        message: 'Pokemon obtained correctly',
+        status: 'success',
+        code: 200,
+        data: data
+      }];
+    }else{
+      salida = [{
+        data: null,
+        message: 'Usuario no es dueño del Pokemon',
+        status: 'error',
+        code: 201
+      }];
+    }
+
 
     return salida;
   }

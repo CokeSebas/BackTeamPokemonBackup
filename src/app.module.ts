@@ -3,6 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { CommonModule } from './module/common/common.module';
 import { UsersModule } from './module/users/users.module';
 import { TeamsModule } from './module/teams/teams.module';
@@ -12,6 +13,7 @@ import { FormatsModule } from './module/formats/formats.module';
 
 @Module({
   imports: [
+    
     ConfigModule.forRoot({
       isGlobal: true, // Esto asegura que las variables estén disponibles globalmente
     }),
@@ -25,6 +27,9 @@ import { FormatsModule } from './module/formats/formats.module';
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: false, // No usar en producción, ya que sincroniza los cambios en las entidades automáticamente
       logging: false,  // Habilitar logging
+      ssl: {
+        rejectUnauthorized: false, // Evita la verificación de certificados, útil para pruebas
+      },
     }),
     CommonModule,
     UsersModule,
