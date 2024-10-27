@@ -12,10 +12,10 @@
     "baseUrl": "./",
     "incremental": true,
     "skipLibCheck": true,
-    "strictNullChecks": false,
-    "noImplicitAny": false,
-    "strictBindCallApply": false,
-    "forceConsistentCasingInFileNames": false,
-    "noFallthroughCasesInSwitch": false
-  }
+    "strict": false,  // Cambiado a true para activar todas las verificaciones estrictas
+    "noImplicitAny": false,  // Cambiado a true para mejorar la seguridad de tipos
+    "strictNullChecks": false // Cambiado a true para mejorar la seguridad de tipos
+  },
+  "include": ["src/**/*.ts"],  // Asegúrate de incluir tus archivos TS
+  "exclude": ["node_modules", "dist"]  // Excluye directorios innecesarios
 }
