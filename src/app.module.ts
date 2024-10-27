@@ -13,6 +13,7 @@ import { FormatsModule } from './module/formats/formats.module';
 
 @Module({
   imports: [
+    
     ConfigModule.forRoot({
       isGlobal: true, // Esto asegura que las variables estén disponibles globalmente
     }),
