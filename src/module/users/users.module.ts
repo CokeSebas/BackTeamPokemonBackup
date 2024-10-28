@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from 'src/db/entities/user.entity';
+import { User } from '../../db/entities/user.entity';
 import { MyLoggerService } from '../common/logger/myLogger.service';
 import { PasswordEncriptService } from '../common/password-encript/password-encript.service';
 import { UsersResolver } from './users.resolver';

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { MyLoggerService } from '../common/logger/myLogger.service';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Format } from 'src/db/entities/format.entity';
+import { Format } from '../../db/entities/format.entity';
 
 @Injectable()
 export class FormatsService {

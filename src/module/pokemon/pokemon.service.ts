@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreatePokemonDto } from './dto/create-pokemon.dto';
 import { UpdatePokemonDto } from './dto/update-pokemon.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Pokemon } from 'src/db/entities/pokemon.entity';
+import { Pokemon } from '../../db/entities/pokemon.entity';
 import { Repository } from 'typeorm';
 import { MyLoggerService } from '../common/logger/myLogger.service';
 
