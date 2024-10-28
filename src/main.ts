@@ -11,7 +11,7 @@ async function bootstrap() {
 
   const limiter = rateLimit({
     windowMs: 1 * 60 * 1000, // 1 minuto
-    max: 10, // Limitar a 10 solicitudes por IP
+    max: 60, // Limitar a 10 solicitudes por IP
   });
 
   // Habilitar CORS con configuración predeterminada
