@@ -63,23 +63,21 @@ export class TeamsResolver {
 
     teams.forEach((element, idx) => {
 
-      if(element.isPublic == true){
-          let aux = {
-            'id': element.id,
-            'team_name': element.teamName,
-            'url_paste': element.urlPaste,
-            'format_id': element.formatId,
-            'desc_uso': element.descUso,
-            'tournament_using': element.tournamentUsing,
-            'mus_fav': element.musFav,
-            'counters': element.counters,
-            'damage_calcs': element.damageCalcs,
-            //'user_id': element.userId
-          }
-    
-          datos.push(aux);
-          idx++;
+      let aux = {
+        'id': element.id,
+        'team_name': element.teamName,
+        'url_paste': element.urlPaste,
+        'format_id': element.formatId,
+        'desc_uso': element.descUso,
+        'tournament_using': element.tournamentUsing,
+        'mus_fav': element.musFav,
+        'counters': element.counters,
+        'damage_calcs': element.damageCalcs,
+        //'user_id': element.userId
       }
+
+      datos.push(aux);
+      idx++;
 
     });
 
@@ -94,31 +92,27 @@ export class TeamsResolver {
   }
 
   async getTeamsHome(){
-    this.logger.log('(R) Getting all teams: ', TeamsResolver.name);
-    let teams = await this.teamsService.findAll();
+    this.logger.log('(R) Getting all teams home: ', TeamsResolver.name);
+    let teams = await this.teamsService.findAllHome();
 
     let salida = [], datos = [];
 
     teams.forEach((element, idx) => {
-
-      if(element.isPublic == true){
-        if(idx < 5){
-          let aux = {
-            'id': element.id,
-            'team_name': element.teamName,
-            'url_paste': element.urlPaste,
-            'format_id': element.formatId,
-            'desc_uso': element.descUso,
-            'tournament_using': element.tournamentUsing,
-            'mus_fav': element.musFav,
-            'counters': element.counters,
-            'damage_calcs': element.damageCalcs,
-            //'user_id': element.userId
-          }
-    
-          datos.push(aux);
-          idx++;
+      if(idx <= 5){
+        let aux = {
+          'id': element.id,
+          'team_name': element.teamName,
+          'url_paste': element.urlPaste,
+          'format_id': element.formatId,
+          'desc_uso': element.descUso,
+          'tournament_using': element.tournamentUsing,
+          'mus_fav': element.musFav,
+          'counters': element.counters,
+          'damage_calcs': element.damageCalcs,
+          //'user_id': element.userId
         }
+  
+        datos.push(aux);
       }
 
     });

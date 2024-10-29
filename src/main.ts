@@ -27,6 +27,18 @@ async function bootstrap() {
 
   await app.listen(port);
   console.log('servidor corridendo en http://localhost:'+port+'/api');
+
+
+  //para subr a deploy
+  //abrir consola de windows
+  //gcloud auth login
+
+  //en caso de cambiar proyecto
+  //gcloud config set project PROJECT_ID
+
+  //npm run build
+  //gcloud app deploy
+  
   //npm run start:dev
 }
 bootstrap();

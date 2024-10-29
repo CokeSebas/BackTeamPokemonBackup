@@ -24,7 +24,12 @@ export class TeamsService {
 
   async findAll() {
     this.logger.log('(S) Getting all teams: ', TeamsService.name);
-    return this.teamRepository.find();
+    return this.teamRepository.find({ where: { isPublic: true }});
+  }
+
+  async findAllHome(){
+    this.logger.log('(S) Getting all teams: ', TeamsService.name);
+    return this.teamRepository.find({where: { isPublic: true }, order: { id: 'desc' }});
   }
 
   async findOne(id: number) {

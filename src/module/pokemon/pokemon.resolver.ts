@@ -165,8 +165,27 @@ export class PokemonResolver {
     let pokemons = await this.pokemonService.findAll();
     let salida = [], data = [];
 
-    pokemons.forEach(element => {
+    for await (const element of pokemons) {
+               
+      const evs = element.evsHp +' HP / ' + element.evsAtk + ' Atk / ' + element.evsDef + ' Def / ' + element.evsSpa+ ' SpA / ' + element.evsSpd+ ' SpD / ' + element.evsSpe+ ' Spe';
+      const ivs = element.ivsHp +' HP / ' + element.ivsAtk + ' Atk / ' + element.ivsDef + ' Def / ' + element.ivsSpa+ ' SpA / ' + element.ivsSpd+ ' SpD / ' + element.ivsSpe+ ' Spe';
+
+      const moves = [element.move1, element.move2, element.move3, element.move4];
+
+      const pasteSd = `
+        ${element.name} @ ${element.item}
+        Ability: ${element.ability}
+        Tera Type: ${element.teraType}
+        EVs: ${element.evsHp} HP / ${element.evsAtk} Atk / ${element.evsDef} Def / ${element.evsSpa} SpA / ${element.evsSpd} SpD / ${element.evsSpe} Spe
+        ${element.nature} Nature
+        - ${element.move1}
+        - ${element.move2}
+        - ${element.move3}
+        - ${element.move4}
+        `;
+
       let aux = {
+        'id': element.id,
         'name': element.name,
         'item': element.item,
         'ability': element.ability,
@@ -188,46 +207,20 @@ export class PokemonResolver {
         'move2': element.move2,
         'move3': element.move3,
         'move4': element.move4,
+        'evs': evs,
+        'ivs': ivs,
+        'moves': moves,
+        'imgPokemon': element.urlImage,
+        'isPublic': element.isPublic,
+        'spreadUse': element.spreadUse,
+        'teamMates': element.teamMates,
+        'calculosPrincipales': element.calculosPrincipales,
+        'nickPoke': element.nickPoke,
+        'pasteSd': pasteSd
       };
 
       data.push(aux);
-    });
-
-    salida = [{
-      message: 'Pokemons obtained correctly',
-      status: 'success',
-      code: 200,
-      data: data
-    }];
-
-
-    return salida;
-  }
-
-  async getPokesHome(){
-    this.logger.log('(R) Getting all pokemons: ', PokemonResolver.name);
-    let pokemons = await this.pokemonService.findAll();
-    let salida = [], data = [];
-
-    let idx = 0;
-    for await (const element of pokemons) {
-      if (element.isPublic == true) {
-        if(idx < 6) {
-
-          let aux = {
-            'name': element.name,
-            'item': element.item,
-            'ability': element.ability,
-            'teraType': element.teraType,
-            'id': element.id,
-            'imgPokemon': element.urlImage,
-          };
-    
-          data.push(aux);
-
-          idx++;
-        }
-      }
+      
     }
 
     salida = [{
@@ -237,6 +230,40 @@ export class PokemonResolver {
       data: data
     }];
 
+    return salida;
+
+  }
+
+  async getPokesHome(){
+    this.logger.log('(R) Getting all pokemons: ', PokemonResolver.name);
+    let pokemons = await this.pokemonService.findAllPokesHome();
+    let salida = [], data = [];
+
+    let idx = 0;
+    for await (const element of pokemons) {
+      if(idx < 6) {
+
+        let aux = {
+          'name': element.name,
+          'item': element.item,
+          'ability': element.ability,
+          'teraType': element.teraType,
+          'id': element.id,
+          'imgPokemon': element.urlImage,
+        };
+  
+        data.push(aux);
+
+        idx++;
+      }
+    }
+
+    salida = [{
+      message: 'Pokemons obtained correctly',
+      status: 'success',
+      code: 200,
+      data: data
+    }];
 
     return salida;
   }

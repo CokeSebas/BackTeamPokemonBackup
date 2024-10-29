@@ -23,7 +23,12 @@ export class PokemonService {
 
   async findAll() {
     this.logger.log('(S) Fetching all pokemons: ', PokemonService.name);
-    return this.pokemonRepository.find();
+    return this.pokemonRepository.find({ where: { isPublic: true } });
+  }
+
+  async findAllPokesHome(){
+    this.logger.log('(S) Fetching all pokemons: ', PokemonService.name);
+    return this.pokemonRepository.find({where: { isPublic: true }, order: {id: 'desc'}});
   }
 
   async findOne(id: number) {
