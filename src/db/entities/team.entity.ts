@@ -1,4 +1,6 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, OneToOne, JoinColumn } from 'typeorm';
+import { SubFormat } from './subFormat.entity';
+
 
 @Entity()
 export class Teams {
@@ -37,5 +39,9 @@ export class Teams {
 
   @Column({name: 'is_public', default: false})
   isPublic: boolean;
+
+  @ManyToOne(() => SubFormat)
+  @JoinColumn({ name: 'sub_format_id' })
+  subformat: SubFormat;
 
 }

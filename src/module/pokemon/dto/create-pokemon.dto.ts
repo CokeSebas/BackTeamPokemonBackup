@@ -19,79 +19,79 @@ export class CreatePokemonDto {
   @IsOptional()
   @IsString()
   @MaxLength(20)
-  tera_type?: string;
+  teraType?: string;
 
   @IsOptional()
   @IsInt()
   @Min(0)
   @Max(252)
-  evs_hp?: number;
+  evsHp?: number;
 
   @IsOptional()
   @IsInt()
   @Min(0)
   @Max(252)
-  evs_atk?: number;
+  evsAtk?: number;
 
   @IsOptional()
   @IsInt()
   @Min(0)
   @Max(252)
-  evs_def?: number;
+  evsDef?: number;
 
   @IsOptional()
   @IsInt()
   @Min(0)
   @Max(252)
-  evs_spa?: number;
+  evsSpa?: number;
 
   @IsOptional()
   @IsInt()
   @Min(0)
   @Max(252)
-  evs_spd?: number;
+  evsSpd?: number;
 
   @IsOptional()
   @IsInt()
   @Min(0)
   @Max(252)
-  evs_spe?: number;
+  evsSpe?: number;
 
   @IsOptional()
   @IsInt()
   @Min(0)
   @Max(31)
-  ivs_hp?: number;
+  ivsHp?: number;
 
   @IsOptional()
   @IsInt()
   @Min(0)
   @Max(31)
-  ivs_atk?: number;
+  ivsAtk?: number;
 
   @IsOptional()
   @IsInt()
   @Min(0)
   @Max(31)
-  ivs_def?: number;
+  ivsDef?: number;
 
   @IsOptional()
   @IsInt()
   @Min(0)
   @Max(31)
-  ivs_spa?: number;
+  ivsSpa?: number;
 
   @IsOptional()
   @IsInt()
   @Min(0)
   @Max(31)
-  ivs_spd?: number;
+  ivsSpd?: number;
 
   @IsOptional()
   @IsInt()
   @Min(0)
   @Max(31)
-  ivs_spe?: number;
+  ivsSpe?: number;
 
   @IsOptional()
   @IsString()
@@ -119,25 +119,28 @@ export class CreatePokemonDto {
   move4?: string;
 
   @IsInt()
-  user_id: number;
+  userId: number;
   
-  is_public: boolean;
+  isPublic: boolean;
 
   @IsString()
-  spread_use?: string;
+  spreadUse?: string;
 
   @IsString()
-  team_mates?: string;
+  teamMates?: string;
 
   @IsString()
-  calculos_principales?: string;
+  calculosPrincipales?: string;
 
   @IsString()
-  nick_poke?: string;
+  nickPoke?: string;
 
   @IsString()
-  paste_sd?: string;
+  pasteSd?: string;
 
   @IsString()
-  url_image?: string;
+  urlImage?: string;
+
+  @IsInt()
+  subFormatId: number;
 }

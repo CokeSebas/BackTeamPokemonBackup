@@ -10,6 +10,7 @@ import { HttpModule } from '@nestjs/axios';
 import { CommonModule } from '../common/common.module';
 import { JwtMiddleware } from '../common/jwt-token/jwt.middleware';
 import { JwtModule } from '@nestjs/jwt';
+import { SubFormatsModule } from '../subFormats/subFormats.module';
 
 @Module({
   imports: [
@@ -21,7 +22,8 @@ import { JwtModule } from '@nestjs/jwt';
       signOptions: { expiresIn: '1d' } 
     }),
     HttpModule,
-    CommonModule
+    CommonModule,
+    SubFormatsModule
   ],
   controllers: [PokemonController],
   providers: [PokemonService, PokemonResolver, MyLoggerService, ImageValidatorService],

@@ -11,6 +11,7 @@ import { CommonModule } from '../common/common.module';
 import { JwtMiddleware } from '../common/jwt-token/jwt.middleware';
 import { JwtTokenService } from '../common/jwt-token/jwt-token.service';
 import { JwtModule } from '@nestjs/jwt';
+import { SubFormatsModule } from '../subFormats/subFormats.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { JwtModule } from '@nestjs/jwt';
     }),
     HttpModule,
     CommonModule,
+    SubFormatsModule
   ],
   controllers: [TeamsController],
   providers: [TeamsService, TeamsResolver, MyLoggerService, ImageValidatorService, JwtTokenService],

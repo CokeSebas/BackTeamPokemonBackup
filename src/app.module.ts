@@ -3,12 +3,12 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
-import { ThrottlerModule } from '@nestjs/throttler';
 import { CommonModule } from './module/common/common.module';
 import { UsersModule } from './module/users/users.module';
 import { TeamsModule } from './module/teams/teams.module';
 import { PokemonModule } from './module/pokemon/pokemon.module';
 import { FormatsModule } from './module/formats/formats.module';
+import { SubFormatsModule } from './module/subFormats/subFormats.module';
 
 
 @Module({
@@ -26,7 +26,7 @@ import { FormatsModule } from './module/formats/formats.module';
       database: process.env.DB_NAME,
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: false, // No usar en producción, ya que sincroniza los cambios en las entidades automáticamente
-      logging: false,  // Habilitar logging
+      logging: false,  // Habilitar logging de BD
       ssl: {
         rejectUnauthorized: false, // Evita la verificación de certificados, útil para pruebas
       },
@@ -35,7 +35,8 @@ import { FormatsModule } from './module/formats/formats.module';
     UsersModule,
     TeamsModule,
     PokemonModule,
-    FormatsModule
+    FormatsModule,
+    SubFormatsModule
   ],
   controllers: [
     AppController

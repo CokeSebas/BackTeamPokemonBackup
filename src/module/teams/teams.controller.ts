@@ -20,9 +20,9 @@ export class TeamsController {
     const salida = await this.teamsResolver.create(createTeamDto);
 
     if(salida[0].status == 'success'){
-      return res.status(salida[0].code).json({salida});
+      return res.status(salida[0].code).json(salida[0]);
     }else{
-      return res.status(salida[0].code).json({salida});
+      return res.status(salida[0].code).json(salida[0]);
     }
   }
 

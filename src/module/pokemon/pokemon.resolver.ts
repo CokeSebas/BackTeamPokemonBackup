@@ -21,8 +21,447 @@ export class PokemonResolver {
 
     let salida = [];
 
+    const pokemonSave = await this.preparePokemon(createPokemonDto);
+    
+    const pokemon = this.pokemonService.create(pokemonSave);
+
+    if (pokemon) {
+      salida = [{
+        message: 'Pokemon created',
+        status: 'success',
+        code: 200
+      }];
+    } else {
+      salida = [{
+        message: 'Error creating pokemon',
+        status: 'error',
+        code: 500
+      }];
+    }
+
+    return salida;
+  }
+
+  async getAll() {
+    this.logger.log('(R) Getting all pokemons: ', PokemonResolver.name);
+    let pokemons = await this.pokemonService.findAllJoin();
+    let salida = [], data = [];
+
+    for await (const element of pokemons) {
+               
+      const evs = element.evsHp +' HP / ' + element.evsAtk + ' Atk / ' + element.evsDef + ' Def / ' + element.evsSpa+ ' SpA / ' + element.evsSpd+ ' SpD / ' + element.evsSpe+ ' Spe';
+      const ivs = element.ivsHp +' HP / ' + element.ivsAtk + ' Atk / ' + element.ivsDef + ' Def / ' + element.ivsSpa+ ' SpA / ' + element.ivsSpd+ ' SpD / ' + element.ivsSpe+ ' Spe';
+
+      const moves = [element.move1, element.move2, element.move3, element.move4];
+
+      const pasteSd = `
+        ${element.name} @ ${element.item}
+        Ability: ${element.ability}
+        Tera Type: ${element.teraType}
+        EVs: ${element.evsHp} HP / ${element.evsAtk} Atk / ${element.evsDef} Def / ${element.evsSpa} SpA / ${element.evsSpd} SpD / ${element.evsSpe} Spe
+        ${element.nature} Nature
+        - ${element.move1}
+        - ${element.move2}
+        - ${element.move3}
+        - ${element.move4}
+        `;
+
+      let aux = {
+        'id': element.id,
+        'name': element.name,
+        'item': element.item,
+        'ability': element.ability,
+        'teraType': element.teraType,
+        'evsHp': element.evsHp,
+        'evsAtk': element.evsAtk,
+        'evsDef': element.evsDef,
+        'evsSpa': element.evsSpa,
+        'evsSpd': element.evsSpd,
+        'evsSpe': element.evsSpe,
+        'ivsHp': element.ivsHp,
+        'ivsAtk': element.ivsAtk,
+        'ivsDef': element.ivsDef,
+        'ivsSpa': element.ivsSpa,
+        'ivsSpd': element.ivsSpd,
+        'ivsSpe': element.ivsSpe,
+        'nature': element.nature,
+        'move1': element.move1,
+        'move2': element.move2,
+        'move3': element.move3,
+        'move4': element.move4,
+        'evs': evs,
+        'ivs': ivs,
+        'moves': moves,
+        'imgPokemon': element.urlImage,
+        'isPublic': element.isPublic,
+        'spreadUse': element.spreadUse,
+        'teamMates': element.teamMates,
+        'calculosPrincipales': element.calculosPrincipales,
+        'nickPoke': element.nickPoke,
+        'pasteSd': pasteSd,
+        'subFormatId': element.subFormat.id,
+        'subFormatName': element.subFormat.subFormatName,
+        'abrevSubFormat': element.subFormat.abrevSubFormat
+      };
+
+      data.push(aux);
+      
+    }
+
+    salida = [{
+      message: 'Pokemons obtained correctly',
+      status: 'success',
+      code: 200,
+      data: data
+    }];
+
+    return salida;
+
+  }
+
+  async getPokesHome(){
+    this.logger.log('(R) Getting all pokemons: ', PokemonResolver.name);
+    let pokemons = await this.pokemonService.findAllPokesHome();
+    let salida = [], data = [];
+
+    let idx = 0;
+    for await (const element of pokemons) {
+      if(idx < 6) {
+
+        let aux = {
+          'name': element.name,
+          'item': element.item,
+          'ability': element.ability,
+          'teraType': element.teraType,
+          'id': element.id,
+          'imgPokemon': element.urlImage,
+        };
+  
+        data.push(aux);
+
+        idx++;
+      }
+    }
+
+    salida = [{
+      message: 'Pokemons obtained correctly',
+      status: 'success',
+      code: 200,
+      data: data
+    }];
+
+    return salida;
+  }
+
+  async getPokemonById(id: number) {
+    this.logger.log('(R) Getting pokemon: ', PokemonResolver.name);
+    let pokemon = await this.pokemonService.findOneJoin(id);
+    let salida = [], data = [];
+
+    if (pokemon) {
+  
+      const evs = pokemon.evsHp +' HP / ' + pokemon.evsAtk + ' Atk / ' + pokemon.evsDef + ' Def / ' + pokemon.evsSpa+ ' SpA / ' + pokemon.evsSpd+ ' SpD / ' + pokemon.evsSpe+ ' Spe';
+      const ivs = pokemon.ivsHp +' HP / ' + pokemon.ivsAtk + ' Atk / ' + pokemon.ivsDef + ' Def / ' + pokemon.ivsSpa+ ' SpA / ' + pokemon.ivsSpd+ ' SpD / ' + pokemon.ivsSpe+ ' Spe';
+
+      const moves = [pokemon.move1, pokemon.move2, pokemon.move3, pokemon.move4];
+
+      let namePoke = pokemon.name;
+      if(pokemon.nickPoke != pokemon.name){ 
+        namePoke = pokemon.nickPoke +' (' + pokemon.name + ')';
+      }
+
+      const pasteSd = `
+        ${namePoke} @ ${pokemon.item}
+        Ability: ${pokemon.ability}
+        Tera Type: ${pokemon.teraType}
+        EVs: ${pokemon.evsHp} HP / ${pokemon.evsAtk} Atk / ${pokemon.evsDef} Def / ${pokemon.evsSpa} SpA / ${pokemon.evsSpd} SpD / ${pokemon.evsSpe} Spe
+        ${pokemon.nature} Nature
+        - ${pokemon.move1}
+        - ${pokemon.move2}
+        - ${pokemon.move3}
+        - ${pokemon.move4}
+        `;
+
+      let aux = {
+        'id': pokemon.id,
+        'name': pokemon.name,
+        'namePoke': namePoke,
+        'item': pokemon.item,
+        'ability': pokemon.ability,
+        'teraType': pokemon.teraType,
+        'evsHp': pokemon.evsHp,
+        'evsAtk': pokemon.evsAtk,
+        'evsDef': pokemon.evsDef,
+        'evsSpa': pokemon.evsSpa,
+        'evsSpd': pokemon.evsSpd,
+        'evsSpe': pokemon.evsSpe,
+        'ivsHp': pokemon.ivsHp,
+        'ivsAtk': pokemon.ivsAtk,
+        'ivsDef': pokemon.ivsDef,
+        'ivsSpa': pokemon.ivsSpa,
+        'ivsSpd': pokemon.ivsSpd,
+        'ivsSpe': pokemon.ivsSpe,
+        'nature': pokemon.nature,
+        'move1': pokemon.move1,
+        'move2': pokemon.move2,
+        'move3': pokemon.move3,
+        'move4': pokemon.move4,
+        'evs': evs,
+        'ivs': ivs,
+        'moves': moves,
+        'urlImage': pokemon.urlImage,
+        'isPublic': pokemon.isPublic,
+        'spreadUse': pokemon.spreadUse,
+        'teamMates': pokemon.teamMates,
+        'calculosPrincipales': pokemon.calculosPrincipales,
+        'nickPoke': pokemon.nickPoke,
+        'pasteSd': pasteSd,
+        'subFormatId': pokemon.subFormat.id,
+        'subFormatName': pokemon.subFormat.subFormatName,
+        'abrevSubFormat': pokemon.subFormat.abrevSubFormat
+      };
+
+      data.push(aux);
+    }
+
+    salida = [{
+      message: 'Pokemon obtained correctly',
+      status: 'success',
+      code: 200,
+      data: data
+    }];
+
+    return salida;
+  }
+
+  async pokemonByUser(id: number, token: string) {
+    this.logger.log('(R) Pokemon by user: ', PokemonResolver.name);
+
+    let pokemon = await this.pokemonService.findOneJoin(id);
+    let salida = [], data = [];
+
+    const tokerUser = token.split(' ')[1];    
+    const idUser = await this.jwtTokenService.decodeToken(tokerUser);
+
+    if(pokemon.userId == idUser.userId){
+      if (pokemon) {
+  
+        const evs = pokemon.evsHp +' HP / ' + pokemon.evsAtk + ' Atk / ' + pokemon.evsDef + ' Def / ' + pokemon.evsSpa+ ' SpA / ' + pokemon.evsSpd+ ' SpD / ' + pokemon.evsSpe+ ' Spe';
+        const ivs = pokemon.ivsHp +' HP / ' + pokemon.ivsAtk + ' Atk / ' + pokemon.ivsDef + ' Def / ' + pokemon.ivsSpa+ ' SpA / ' + pokemon.ivsSpd+ ' SpD / ' + pokemon.ivsSpe+ ' Spe';
+  
+        const moves = [pokemon.move1, pokemon.move2, pokemon.move3, pokemon.move4];
+
+        let namePoke = pokemon.name;
+        if(pokemon.nickPoke != pokemon.name){ 
+          namePoke = pokemon.nickPoke +' (' + pokemon.name + ')';
+        }
+  
+        const pasteSd = `
+          ${namePoke} @ ${pokemon.item}
+          Ability: ${pokemon.ability}
+          Tera Type: ${pokemon.teraType}
+          EVs: ${pokemon.evsHp} HP / ${pokemon.evsAtk} Atk / ${pokemon.evsDef} Def / ${pokemon.evsSpa} SpA / ${pokemon.evsSpd} SpD / ${pokemon.evsSpe} Spe
+          ${pokemon.nature} Nature
+          - ${pokemon.move1}
+          - ${pokemon.move2}
+          - ${pokemon.move3}
+          - ${pokemon.move4}
+          `;
+  
+        let aux = {
+          'id': pokemon.id,
+          'name': pokemon.name,
+          'namePoke': namePoke,
+          'item': pokemon.item,
+          'ability': pokemon.ability,
+          'teraType': pokemon.teraType,
+          'evsHp': pokemon.evsHp,
+          'evsAtk': pokemon.evsAtk,
+          'evsDef': pokemon.evsDef,
+          'evsSpa': pokemon.evsSpa,
+          'evsSpd': pokemon.evsSpd,
+          'evsSpe': pokemon.evsSpe,
+          'ivsHp': pokemon.ivsHp,
+          'ivsAtk': pokemon.ivsAtk,
+          'ivsDef': pokemon.ivsDef,
+          'ivsSpa': pokemon.ivsSpa,
+          'ivsSpd': pokemon.ivsSpd,
+          'ivsSpe': pokemon.ivsSpe,
+          'nature': pokemon.nature,
+          'move1': pokemon.move1,
+          'move2': pokemon.move2,
+          'move3': pokemon.move3,
+          'move4': pokemon.move4,
+          'evs': evs,
+          'ivs': ivs,
+          'moves': moves,
+          'urlImage': pokemon.urlImage,
+          'isPublic': pokemon.isPublic,
+          'spreadUse': pokemon.spreadUse,
+          'teamMates': pokemon.teamMates,
+          'calculosPrincipales': pokemon.calculosPrincipales,
+          'nickPoke': pokemon.nickPoke,
+          'pasteSd': pasteSd,
+          'subFormatId': pokemon.subFormat.id,
+          'subFormatName': pokemon.subFormat.subFormatName,
+          'abrevSubFormat': pokemon.subFormat.abrevSubFormat
+        };
+  
+        data.push(aux);
+      }
+  
+      salida = [{
+        message: 'Pokemon obtained correctly',
+        status: 'success',
+        code: 200,
+        data: data
+      }];
+    }else{
+      salida = [{
+        data: null,
+        message: 'Usuario no es dueño del Pokemon',
+        status: 'error',
+        code: 201
+      }];
+    }
+
+
+    return salida;
+  }
+
+  async editPokemon(id: number, updatePokemonDto: UpdatePokemonDto) {
+    this.logger.log('(R) Edit pokemon: '+id, PokemonResolver.name);
+    
+    let salida = [], data = {};
+
+    const pokemonExist = await this.pokemonService.findOne(id);
+
+    if (pokemonExist) {
+
+      const pokemonSave = await this.preparePokemon(updatePokemonDto);
+
+      const pokemon = await this.pokemonService.update(id, pokemonSave);
+
+      if(pokemon.affected == 1){
+        data = {
+          message: 'Pokemon updated',
+          status: 'success',
+          code: 200 
+        };
+
+        salida = [{
+          'data': data,
+          'message': 'Pokemon updated',
+          'status': 'success',
+          'code': 200
+        }];
+      }else{ 
+        salida = [{
+          message: 'Error updating pokemon',
+          status: 'error',
+          code: 500
+        }];
+      }
+    }else{
+      salida = [{
+        message: 'Pokemon not found',
+        status: 'error',
+        code: 404
+      }];
+    }
+
+    return salida;
+  }
+
+  async pokemonsByUser(id: number) {
+    this.logger.log('(R) Pokemons by user: ', PokemonResolver.name);
+    const pokemons = await this.pokemonService.findPokesByUserJoin(id);
+
+    let salida = [], data = [];
+
+    for await (const element of pokemons) {
+               
+      const evs = element.evsHp +' HP / ' + element.evsAtk + ' Atk / ' + element.evsDef + ' Def / ' + element.evsSpa+ ' SpA / ' + element.evsSpd+ ' SpD / ' + element.evsSpe+ ' Spe';
+      const ivs = element.ivsHp +' HP / ' + element.ivsAtk + ' Atk / ' + element.ivsDef + ' Def / ' + element.ivsSpa+ ' SpA / ' + element.ivsSpd+ ' SpD / ' + element.ivsSpe+ ' Spe';
+
+      const moves = [element.move1, element.move2, element.move3, element.move4];
+
+      const pasteSd = `
+        ${element.name} @ ${element.item}
+        Ability: ${element.ability}
+        Tera Type: ${element.teraType}
+        EVs: ${element.evsHp} HP / ${element.evsAtk} Atk / ${element.evsDef} Def / ${element.evsSpa} SpA / ${element.evsSpd} SpD / ${element.evsSpe} Spe
+        ${element.nature} Nature
+        - ${element.move1}
+        - ${element.move2}
+        - ${element.move3}
+        - ${element.move4}
+        `;
+
+      let aux = {
+        'id': element.id,
+        'name': element.name,
+        'item': element.item,
+        'ability': element.ability,
+        'teraType': element.teraType,
+        'evsHp': element.evsHp,
+        'evsAtk': element.evsAtk,
+        'evsDef': element.evsDef,
+        'evsSpa': element.evsSpa,
+        'evsSpd': element.evsSpd,
+        'evsSpe': element.evsSpe,
+        'ivsHp': element.ivsHp,
+        'ivsAtk': element.ivsAtk,
+        'ivsDef': element.ivsDef,
+        'ivsSpa': element.ivsSpa,
+        'ivsSpd': element.ivsSpd,
+        'ivsSpe': element.ivsSpe,
+        'nature': element.nature,
+        'move1': element.move1,
+        'move2': element.move2,
+        'move3': element.move3,
+        'move4': element.move4,
+        'evs': evs,
+        'ivs': ivs,
+        'moves': moves,
+        'imgPokemon': element.urlImage,
+        'isPublic': element.isPublic,
+        'spreadUse': element.spreadUse,
+        'teamMates': element.teamMates,
+        'calculosPrincipales': element.calculosPrincipales,
+        'nickPoke': element.nickPoke,
+        'pasteSd': pasteSd,
+        'subFormatId': element.subFormat.id,
+        'subFormatName': element.subFormat.subFormatName,
+        'abrevSubFormat': element.subFormat.abrevSubFormat
+      };
+
+      data.push(aux);
+      
+    }
+
+    salida = [{
+      message: 'Pokemons obtained correctly',
+      status: 'success',
+      code: 200,
+      data: data
+    }];
+
+
+    return salida;
+
+
+
+    //return pokemons;
+  }
+
+  async preparePokemon(createPokemonDto: any) {
+    this.logger.log('(R) Preparing pokemon: ', PokemonResolver.name);
+    
+    const inputText = this.cleanedInput(createPokemonDto.pasteSd);
+    
     // Separar por líneas utilizando split()
-    let lines = createPokemonDto.paste_sd.split(/\r?\n/);
+    let lines = inputText.split(/\r?\n/);
     lines = lines.filter(line => !line.includes('Level'));
     lines = lines.filter(line => !line.includes('Shiny:'));
  
@@ -101,17 +540,39 @@ export class PokemonResolver {
     const namePoke = name.trim().toLowerCase();
     let pokeImg = '';
 
-    //createPokemonDto.url_image
-
-    if(await this.imgValidatorService.checkImageExists('https://play.pokemonshowdown.com/sprites/gen5/'+namePoke+'.png') == true) {
-      pokeImg = 'https://play.pokemonshowdown.com/sprites/gen5/'+namePoke+'.png';
-    }else if (await this.imgValidatorService.checkImageExists('https://play.pokemonshowdown.com/sprites/dex/'+namePoke.replace('-', '')+'.png') == true) {
-      pokeImg = 'https://play.pokemonshowdown.com/sprites/dex/'+namePoke.replace('-', '')+'.png';
+    const [nameSpecies] = lines[0].split(' @ ');
+    let nickname, species;
+    // Verificar si hay un apodo (nickname) o no
+    const nicknameMatch = nameSpecies.match(/(.+?) \((.+)\)/);
+    if (nicknameMatch) {
+        // Si hay un apodo
+        [nickname, species] = nicknameMatch.slice(1, 3);
+    } else {
+        // Si no hay apodo, tomar directamente la especie
+        nickname = null; // No tiene apodo
+        species = nameSpecies;
     }
 
+    let speciesName = nameSpecies.replace('(M)','');
+    speciesName = speciesName.replace('(F)','');
+
+    let imgName = speciesName.trim().toLowerCase();
+    imgName = imgName.replace('(m)', '');
+    imgName = imgName.replace('(f)', '');
+    imgName = imgName.trim();
+
+    if(await this.imgValidatorService.checkImageExists('https://play.pokemonshowdown.com/sprites/gen5/'+imgName+'.png') == true) {
+      pokeImg = 'https://play.pokemonshowdown.com/sprites/gen5/'+imgName+'.png';
+    }else if (await this.imgValidatorService.checkImageExists('https://play.pokemonshowdown.com/sprites/dex/'+imgName.replace('-', '')+'.png') == true) {
+      pokeImg = 'https://play.pokemonshowdown.com/sprites/dex/'+imgName.replace('-', '')+'.png';
+    }
+
+    console.log(item);
+    console.log(ability);
+    console.log(teraType);
 
     const pokemonSave = {
-      name: name.trim(),
+      name: speciesName,
       item: item.trim(),
       ability: ability.trim(),
       teraType: teraType.trim(),
@@ -132,431 +593,27 @@ export class PokemonResolver {
       move2: move2.trim(),
       move3: move3.trim(),
       move4: move4.trim(),
-      userId: createPokemonDto.user_id,
-      spreadUse: createPokemonDto.spread_use,
-      teamMates: createPokemonDto.team_mates,
-      calculosPrincipales: createPokemonDto.calculos_principales,
-      nickPoke: createPokemonDto.nick_poke,
-      isPublic: createPokemonDto.is_public,
-      urlImage: pokeImg
-    }    
-
-    const pokemon = this.pokemonService.create(pokemonSave);
-
-    if (pokemon) {
-      salida = [{
-        message: 'Pokemon created',
-        status: 'success',
-        code: 200
-      }];
-    } else {
-      salida = [{
-        message: 'Error creating pokemon',
-        status: 'error',
-        code: 500
-      }];
+      userId: createPokemonDto.userId,
+      spreadUse: createPokemonDto.spreadUse,
+      teamMates: createPokemonDto.teamMates,
+      calculosPrincipales: createPokemonDto.calculosPrincipales,
+      nickPoke: createPokemonDto.nickPoke,
+      isPublic: createPokemonDto.isPublic,
+      urlImage: pokeImg,
+      subFormatId: createPokemonDto.subFormatId
     }
 
-    return salida;
+    return pokemonSave;
   }
 
-  async getAll() {
-    this.logger.log('(R) Getting all pokemons: ', PokemonResolver.name);
-    let pokemons = await this.pokemonService.findAll();
-    let salida = [], data = [];
+  cleanedInput(text: string) {
+    const cleanedInput = text
+      .trim() // Eliminamos espacios en los extremos
+      //.replace(/\s+/g, ' ') // Reemplazamos múltiples espacios por uno solo
+      //.replace(/\n /g, '\n') // Normalizamos los saltos de línea
+      .replace(/\s(?=\n)/g, ''); // Eliminamos espacios al final de las líneas
 
-    for await (const element of pokemons) {
-               
-      const evs = element.evsHp +' HP / ' + element.evsAtk + ' Atk / ' + element.evsDef + ' Def / ' + element.evsSpa+ ' SpA / ' + element.evsSpd+ ' SpD / ' + element.evsSpe+ ' Spe';
-      const ivs = element.ivsHp +' HP / ' + element.ivsAtk + ' Atk / ' + element.ivsDef + ' Def / ' + element.ivsSpa+ ' SpA / ' + element.ivsSpd+ ' SpD / ' + element.ivsSpe+ ' Spe';
-
-      const moves = [element.move1, element.move2, element.move3, element.move4];
-
-      const pasteSd = `
-        ${element.name} @ ${element.item}
-        Ability: ${element.ability}
-        Tera Type: ${element.teraType}
-        EVs: ${element.evsHp} HP / ${element.evsAtk} Atk / ${element.evsDef} Def / ${element.evsSpa} SpA / ${element.evsSpd} SpD / ${element.evsSpe} Spe
-        ${element.nature} Nature
-        - ${element.move1}
-        - ${element.move2}
-        - ${element.move3}
-        - ${element.move4}
-        `;
-
-      let aux = {
-        'id': element.id,
-        'name': element.name,
-        'item': element.item,
-        'ability': element.ability,
-        'teraType': element.teraType,
-        'evsHp': element.evsHp,
-        'evsAtk': element.evsAtk,
-        'evsDef': element.evsDef,
-        'evsSpa': element.evsSpa,
-        'evsSpd': element.evsSpd,
-        'evsSpe': element.evsSpe,
-        'ivsHp': element.ivsHp,
-        'ivsAtk': element.ivsAtk,
-        'ivsDef': element.ivsDef,
-        'ivsSpa': element.ivsSpa,
-        'ivsSpd': element.ivsSpd,
-        'ivsSpe': element.ivsSpe,
-        'nature': element.nature,
-        'move1': element.move1,
-        'move2': element.move2,
-        'move3': element.move3,
-        'move4': element.move4,
-        'evs': evs,
-        'ivs': ivs,
-        'moves': moves,
-        'imgPokemon': element.urlImage,
-        'isPublic': element.isPublic,
-        'spreadUse': element.spreadUse,
-        'teamMates': element.teamMates,
-        'calculosPrincipales': element.calculosPrincipales,
-        'nickPoke': element.nickPoke,
-        'pasteSd': pasteSd
-      };
-
-      data.push(aux);
-      
-    }
-
-    salida = [{
-      message: 'Pokemons obtained correctly',
-      status: 'success',
-      code: 200,
-      data: data
-    }];
-
-    return salida;
-
-  }
-
-  async getPokesHome(){
-    this.logger.log('(R) Getting all pokemons: ', PokemonResolver.name);
-    let pokemons = await this.pokemonService.findAllPokesHome();
-    let salida = [], data = [];
-
-    let idx = 0;
-    for await (const element of pokemons) {
-      if(idx < 6) {
-
-        let aux = {
-          'name': element.name,
-          'item': element.item,
-          'ability': element.ability,
-          'teraType': element.teraType,
-          'id': element.id,
-          'imgPokemon': element.urlImage,
-        };
-  
-        data.push(aux);
-
-        idx++;
-      }
-    }
-
-    salida = [{
-      message: 'Pokemons obtained correctly',
-      status: 'success',
-      code: 200,
-      data: data
-    }];
-
-    return salida;
-  }
-
-  async getPokemonById(id: number) {
-    this.logger.log('(R) Getting pokemon: ', PokemonResolver.name);
-    let pokemon = await this.pokemonService.findOne(id);
-    let salida = [], data = [];
-
-    if (pokemon) {
-  
-      const evs = pokemon.evsHp +' HP / ' + pokemon.evsAtk + ' Atk / ' + pokemon.evsDef + ' Def / ' + pokemon.evsSpa+ ' SpA / ' + pokemon.evsSpd+ ' SpD / ' + pokemon.evsSpe+ ' Spe';
-      const ivs = pokemon.ivsHp +' HP / ' + pokemon.ivsAtk + ' Atk / ' + pokemon.ivsDef + ' Def / ' + pokemon.ivsSpa+ ' SpA / ' + pokemon.ivsSpd+ ' SpD / ' + pokemon.ivsSpe+ ' Spe';
-
-      const moves = [pokemon.move1, pokemon.move2, pokemon.move3, pokemon.move4];
-
-      let namePoke = pokemon.name;
-      if(pokemon.nickPoke != pokemon.name){ 
-        namePoke = pokemon.nickPoke +' (' + pokemon.name + ')';
-      }
-
-      const pasteSd = `
-        ${namePoke} @ ${pokemon.item}
-        Ability: ${pokemon.ability}
-        Tera Type: ${pokemon.teraType}
-        EVs: ${pokemon.evsHp} HP / ${pokemon.evsAtk} Atk / ${pokemon.evsDef} Def / ${pokemon.evsSpa} SpA / ${pokemon.evsSpd} SpD / ${pokemon.evsSpe} Spe
-        ${pokemon.nature} Nature
-        - ${pokemon.move1}
-        - ${pokemon.move2}
-        - ${pokemon.move3}
-        - ${pokemon.move4}
-        `;
-
-      let aux = {
-        'id': pokemon.id,
-        'name': pokemon.name,
-        'namePoke': namePoke,
-        'item': pokemon.item,
-        'ability': pokemon.ability,
-        'teraType': pokemon.teraType,
-        'evsHp': pokemon.evsHp,
-        'evsAtk': pokemon.evsAtk,
-        'evsDef': pokemon.evsDef,
-        'evsSpa': pokemon.evsSpa,
-        'evsSpd': pokemon.evsSpd,
-        'evsSpe': pokemon.evsSpe,
-        'ivsHp': pokemon.ivsHp,
-        'ivsAtk': pokemon.ivsAtk,
-        'ivsDef': pokemon.ivsDef,
-        'ivsSpa': pokemon.ivsSpa,
-        'ivsSpd': pokemon.ivsSpd,
-        'ivsSpe': pokemon.ivsSpe,
-        'nature': pokemon.nature,
-        'move1': pokemon.move1,
-        'move2': pokemon.move2,
-        'move3': pokemon.move3,
-        'move4': pokemon.move4,
-        'evs': evs,
-        'ivs': ivs,
-        'moves': moves,
-        'urlImage': pokemon.urlImage,
-        'isPublic': pokemon.isPublic,
-        'spreadUse': pokemon.spreadUse,
-        'teamMates': pokemon.teamMates,
-        'calculosPrincipales': pokemon.calculosPrincipales,
-        'nickPoke': pokemon.nickPoke,
-        'pasteSd': pasteSd
-      };
-
-      data.push(aux);
-    }
-
-    salida = [{
-      message: 'Pokemon obtained correctly',
-      status: 'success',
-      code: 200,
-      data: data
-    }];
-
-    return salida;
-  }
-
-  async pokemonByUser(id: number, token: string) {
-    this.logger.log('(R) Pokemon by user: ', PokemonResolver.name);
-
-    let pokemon = await this.pokemonService.findOne(id);
-    let salida = [], data = [];
-
-    const tokerUser = token.split(' ')[1];    
-    const idUser = await this.jwtTokenService.decodeToken(tokerUser);
-
-    if(pokemon.userId == idUser.userId){
-      if (pokemon) {
-  
-        const evs = pokemon.evsHp +' HP / ' + pokemon.evsAtk + ' Atk / ' + pokemon.evsDef + ' Def / ' + pokemon.evsSpa+ ' SpA / ' + pokemon.evsSpd+ ' SpD / ' + pokemon.evsSpe+ ' Spe';
-        const ivs = pokemon.ivsHp +' HP / ' + pokemon.ivsAtk + ' Atk / ' + pokemon.ivsDef + ' Def / ' + pokemon.ivsSpa+ ' SpA / ' + pokemon.ivsSpd+ ' SpD / ' + pokemon.ivsSpe+ ' Spe';
-  
-        const moves = [pokemon.move1, pokemon.move2, pokemon.move3, pokemon.move4];
-
-        let namePoke = pokemon.name;
-        if(pokemon.nickPoke != pokemon.name){ 
-          namePoke = pokemon.nickPoke +' (' + pokemon.name + ')';
-        }
-  
-        const pasteSd = `
-          ${namePoke} @ ${pokemon.item}
-          Ability: ${pokemon.ability}
-          Tera Type: ${pokemon.teraType}
-          EVs: ${pokemon.evsHp} HP / ${pokemon.evsAtk} Atk / ${pokemon.evsDef} Def / ${pokemon.evsSpa} SpA / ${pokemon.evsSpd} SpD / ${pokemon.evsSpe} Spe
-          ${pokemon.nature} Nature
-          - ${pokemon.move1}
-          - ${pokemon.move2}
-          - ${pokemon.move3}
-          - ${pokemon.move4}
-          `;
-  
-        let aux = {
-          'id': pokemon.id,
-          'name': pokemon.name,
-          'namePoke': namePoke,
-          'item': pokemon.item,
-          'ability': pokemon.ability,
-          'teraType': pokemon.teraType,
-          'evsHp': pokemon.evsHp,
-          'evsAtk': pokemon.evsAtk,
-          'evsDef': pokemon.evsDef,
-          'evsSpa': pokemon.evsSpa,
-          'evsSpd': pokemon.evsSpd,
-          'evsSpe': pokemon.evsSpe,
-          'ivsHp': pokemon.ivsHp,
-          'ivsAtk': pokemon.ivsAtk,
-          'ivsDef': pokemon.ivsDef,
-          'ivsSpa': pokemon.ivsSpa,
-          'ivsSpd': pokemon.ivsSpd,
-          'ivsSpe': pokemon.ivsSpe,
-          'nature': pokemon.nature,
-          'move1': pokemon.move1,
-          'move2': pokemon.move2,
-          'move3': pokemon.move3,
-          'move4': pokemon.move4,
-          'evs': evs,
-          'ivs': ivs,
-          'moves': moves,
-          'urlImage': pokemon.urlImage,
-          'isPublic': pokemon.isPublic,
-          'spreadUse': pokemon.spreadUse,
-          'teamMates': pokemon.teamMates,
-          'calculosPrincipales': pokemon.calculosPrincipales,
-          'nickPoke': pokemon.nickPoke,
-          'pasteSd': pasteSd
-        };
-  
-        data.push(aux);
-      }
-  
-      salida = [{
-        message: 'Pokemon obtained correctly',
-        status: 'success',
-        code: 200,
-        data: data
-      }];
-    }else{
-      salida = [{
-        data: null,
-        message: 'Usuario no es dueño del Pokemon',
-        status: 'error',
-        code: 201
-      }];
-    }
-
-
-    return salida;
-  }
-
-  async editPokemon(id: number, updatePokemonDto: UpdatePokemonDto) {
-    this.logger.log('(S) Edit pokemon: ', PokemonResolver.name);
-    
-    let salida = [], data = {};
-
-    const pokemonExist = await this.pokemonService.findOne(id);
-
-    if (pokemonExist) {
-
-      const pokemon = await this.pokemonService.update(id, updatePokemonDto);
-
-      if(pokemon.affected == 1){
-        data = {
-          message: 'Pokemon updated',
-          status: 'success',
-          code: 200 
-        };
-
-        salida = [{
-          'data': data,
-          'message': 'Pokemon updated',
-          'status': 'success',
-          'code': 200
-        }];
-      }else{ 
-        salida = [{
-          message: 'Error updating pokemon',
-          status: 'error',
-          code: 500
-        }];
-      }
-    }else{
-      salida = [{
-        message: 'Pokemon not found',
-        status: 'error',
-        code: 404
-      }];
-    }
-
-    return salida;
-  }
-
-  async pokemonsByUser(id: number) {
-    this.logger.log('(R) Pokemons by user: ', PokemonResolver.name);
-    const pokemons = await this.pokemonService.findPokesByUser(id);
-
-    let salida = [], data = [];
-
-    for await (const element of pokemons) {
-               
-      const evs = element.evsHp +' HP / ' + element.evsAtk + ' Atk / ' + element.evsDef + ' Def / ' + element.evsSpa+ ' SpA / ' + element.evsSpd+ ' SpD / ' + element.evsSpe+ ' Spe';
-      const ivs = element.ivsHp +' HP / ' + element.ivsAtk + ' Atk / ' + element.ivsDef + ' Def / ' + element.ivsSpa+ ' SpA / ' + element.ivsSpd+ ' SpD / ' + element.ivsSpe+ ' Spe';
-
-      const moves = [element.move1, element.move2, element.move3, element.move4];
-
-      const pasteSd = `
-        ${element.name} @ ${element.item}
-        Ability: ${element.ability}
-        Tera Type: ${element.teraType}
-        EVs: ${element.evsHp} HP / ${element.evsAtk} Atk / ${element.evsDef} Def / ${element.evsSpa} SpA / ${element.evsSpd} SpD / ${element.evsSpe} Spe
-        ${element.nature} Nature
-        - ${element.move1}
-        - ${element.move2}
-        - ${element.move3}
-        - ${element.move4}
-        `;
-
-      let aux = {
-        'id': element.id,
-        'name': element.name,
-        'item': element.item,
-        'ability': element.ability,
-        'teraType': element.teraType,
-        'evsHp': element.evsHp,
-        'evsAtk': element.evsAtk,
-        'evsDef': element.evsDef,
-        'evsSpa': element.evsSpa,
-        'evsSpd': element.evsSpd,
-        'evsSpe': element.evsSpe,
-        'ivsHp': element.ivsHp,
-        'ivsAtk': element.ivsAtk,
-        'ivsDef': element.ivsDef,
-        'ivsSpa': element.ivsSpa,
-        'ivsSpd': element.ivsSpd,
-        'ivsSpe': element.ivsSpe,
-        'nature': element.nature,
-        'move1': element.move1,
-        'move2': element.move2,
-        'move3': element.move3,
-        'move4': element.move4,
-        'evs': evs,
-        'ivs': ivs,
-        'moves': moves,
-        'imgPokemon': element.urlImage,
-        'isPublic': element.isPublic,
-        'spreadUse': element.spreadUse,
-        'teamMates': element.teamMates,
-        'calculosPrincipales': element.calculosPrincipales,
-        'nickPoke': element.nickPoke,
-        'pasteSd': pasteSd
-      };
-
-      data.push(aux);
-      
-    }
-
-    salida = [{
-      message: 'Pokemons obtained correctly',
-      status: 'success',
-      code: 200,
-      data: data
-    }];
-
-
-    return salida;
-
-
-
-    //return pokemons;
+    return cleanedInput;
   }
 
 }

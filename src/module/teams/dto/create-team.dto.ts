@@ -3,34 +3,37 @@ import { Column } from 'typeorm';
 
 export class CreateTeamDto {
   @IsString()
-  team_name: string;
+  teamName: string;
 
   @IsString()
-  url_paste?: string;
+  urlPaste?: string;
 
   @IsInt()
-  format_id: number;
+  formatId: number;
 
   @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', name: 'date_created' })
-  date_created: Date;
+  dateCreated: Date;
 
   @IsString()
-  desc_uso?: string;
+  descUso?: string;
 
   @IsString()
-  tournament_using?: string;
+  tournamentUsing?: string;
 
   @IsString()
-  mus_fav?: string;
+  musFav?: string;
 
   @IsString()
   counters?: string;
 
   @IsString()
-  damage_calcs?: string;
+  damageCalcs?: string;
 
-  is_public: boolean;
+  isPublic: boolean;
 
   @IsInt()
-  user_id: number;
+  userId: number;
+
+  @IsInt()
+  subFormatId: number;
 }

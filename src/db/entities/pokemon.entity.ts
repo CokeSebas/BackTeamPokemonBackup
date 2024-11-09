@@ -1,5 +1,6 @@
 import { IsInt, IsNotEmpty, IsOptional, IsString, MaxLength, Min, Max } from 'class-validator';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { SubFormat } from './subFormat.entity';
 
 @Entity()
 export class Pokemon {
@@ -169,5 +170,9 @@ export class Pokemon {
 
   @Column({name: 'url_image'})
   urlImage: string;
+
+  @ManyToOne(() => SubFormat)
+  @JoinColumn({ name: 'sub_format_id' })
+  subFormat: SubFormat; 
 
 }
