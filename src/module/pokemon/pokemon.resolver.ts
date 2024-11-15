@@ -9,6 +9,8 @@ import { JwtTokenService } from "../common/jwt-token/jwt-token.service";
 @Injectable()
 export class PokemonResolver {
 
+  private paradoxPastPokes = ['flutter mane', 'great tusk', 'scream tail', 'brute bonnet', 'slither wing', 'sandy shocks', 'roaring moon', 'walking wake', 'gouging fire', 'raging bolt'];
+
   constructor(
     private readonly pokemonService: PokemonService,
     private readonly logger: MyLoggerService,
@@ -561,15 +563,24 @@ export class PokemonResolver {
     imgName = imgName.replace('(f)', '');
     imgName = imgName.trim();
 
-    if(await this.imgValidatorService.checkImageExists('https://play.pokemonshowdown.com/sprites/gen5/'+imgName+'.png') == true) {
-      pokeImg = 'https://play.pokemonshowdown.com/sprites/gen5/'+imgName+'.png';
-    }else if (await this.imgValidatorService.checkImageExists('https://play.pokemonshowdown.com/sprites/dex/'+imgName.replace('-', '')+'.png') == true) {
-      pokeImg = 'https://play.pokemonshowdown.com/sprites/dex/'+imgName.replace('-', '')+'.png';
+    // Comprobar si la imagen existe en las diferentes URLs
+    if (await this.imgValidatorService.checkImageExists('https://play.pokemonshowdown.com/sprites/gen5/' + imgName + '.png')) {
+      pokeImg = 'https://play.pokemonshowdown.com/sprites/gen5/' + imgName + '.png';
+    } else if (await this.imgValidatorService.checkImageExists('https://play.pokemonshowdown.com/sprites/dex/' + imgName.replace('-', '') + '.png')) {
+      pokeImg = 'https://play.pokemonshowdown.com/sprites/dex/' + imgName.replace('-', '') + '.png';
+    } else if( imgName == 'tauros-paldea-aqua' || imgName == 'tauros-paldea-blaze' || imgName == 'tauros-paldea-combat' || imgName == 'urshifu-rapid-strike' ) {
+      imgName = imgName.replace(/-(?=[^-]*$)/, '');
+      pokeImg = 'https://play.pokemonshowdown.com/sprites/gen5/' + imgName + '.png';
+    } else if (imgName.includes('iron')) {
+      imgName = imgName.replace(' ', '');
+      pokeImg = 'https://play.pokemonshowdown.com/sprites/gen5/' + imgName + '.png';
+    }else if (this.paradoxPastPokes.includes(imgName)) {
+      imgName = imgName.replace(' ', '');
+      pokeImg = 'https://play.pokemonshowdown.com/sprites/gen5/' + imgName + '.png';
+    }else if ( imgName.includes('necrozma-')){
+      imgName = imgName.replace(/-(?=[^-]*$)/, '');
+      pokeImg = 'https://play.pokemonshowdown.com/sprites/gen5/' + imgName + '.png';
     }
-
-    console.log(item);
-    console.log(ability);
-    console.log(teraType);
 
     const pokemonSave = {
       name: speciesName,

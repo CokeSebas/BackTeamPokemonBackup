@@ -11,6 +11,8 @@ import { UpdateTeamDto } from "./dto/update-team.dto";
 @Injectable()
 export class TeamsResolver {
 
+  private paradoxPastPokes = ['flutter mane', 'great tusk', 'scream tail', 'brute bonnet', 'slither wing', 'sandy shocks', 'roaring moon', 'walking wake', 'gouging fire', 'raging bolt'];
+
   constructor(
     private readonly teamsService: TeamsService,
     private readonly logger: MyLoggerService,
@@ -129,118 +131,8 @@ export class TeamsResolver {
   
     if(team){
       const teamJson = await this.getTeamJson(team.urlPaste+'/json');
-      // Separar los bloques de información para cada Pokémon
-      const pokemonBlocks = teamJson.paste.trim().split(/\n\s*(?=[^\n]+ @ )/);
 
-      // Procesar cada bloque para extraer los detalles del Pokémon
-      const pokemonArray = await Promise.all(pokemonBlocks.map(async block => {
-        const lines = block.split('\n');
-
-        // Extraer el nombre y la especie
-        const [nameSpecies, item] = lines[0].split(' @ ');
-        let nickname, species;
-
-        let speciesName = nameSpecies.replace('(M)','');
-        speciesName = speciesName.replace('(F)','');
-
-        // Verificar si hay un apodo (nickname) o no
-        const nicknameMatch = speciesName.match(/(.+?) \((.+)\)/);
-        if (nicknameMatch) {
-            // Si hay un apodo
-            [nickname, species] = nicknameMatch.slice(1, 3);
-        } else {
-            // Si no hay apodo, tomar directamente la especie
-            nickname = null; // No tiene apodo
-            species = nameSpecies;
-        }
-
-        // Extraer la habilidad
-        const ability = lines[1].replace('Ability: ', '');
-
-        // Extraer el nivel
-        const level = parseInt(lines[2].replace('Level: ', ''), 10);
-        
-        // Inicializar variable shiny
-        let shiny = false;
-
-        // Verificar si la línea "Shiny" está presente
-        const shinyIndex = lines.findIndex(line => line.startsWith('Shiny:'));
-        if (shinyIndex !== -1) {
-            const shinyLine = lines[shinyIndex].replace('Shiny: ', '').trim();
-            shiny = shinyLine.toLowerCase() === 'yes'; // Convertir a booleano
-        }
-
-        // Extraer el tipo Tera
-        const teraTypeIndex = shinyIndex !== -1 ? shinyIndex + 1 : 3; // Ajustar índice si hay línea Shiny
-        const teraType = lines[teraTypeIndex].replace('Tera Type: ', '');
-
-        // Extraer los EVs
-        const evsIndex = shinyIndex !== -1 ? shinyIndex + 2 : 4; // Ajustar índice si hay línea Shiny
-        const evs = lines[evsIndex].replace('EVs: ', '');
-
-        // Extraer la naturaleza
-        const natureIndex = shinyIndex !== -1 ? shinyIndex + 3 : 5; // Ajustar índice si hay línea Shiny
-        const nature = lines[natureIndex].replace(' Nature', '');
-
-        // Extraer los IVs si están presentes
-        const ivsLineIndex = shinyIndex !== -1 ? shinyIndex + 4 : 6; // Ajustar índice si hay línea Shiny
-        const ivsLine = lines[ivsLineIndex] && lines[ivsLineIndex].startsWith('IVs: ') ? lines[ivsLineIndex].replace('IVs: ', '') : null;
-
-        // Extraer los movimientos
-        const movesStartIndex = ivsLine ? (shinyIndex !== -1 ? shinyIndex + 5 : 7) : (shinyIndex !== -1 ? shinyIndex + 4 : 6);
-        const moves = lines.slice(movesStartIndex).map(line => line.replace('- ', '').trim());
-
-        let pokeImg = '';
-
-        let imgName = species.trim().toLowerCase();
-        imgName = imgName.replace('(m)', '');
-        imgName = imgName.replace('(f)', '');
-        imgName = imgName.trim();
-
-        // Comprobar si la imagen existe en las diferentes URLs
-        if (await this.imgValidatorService.checkImageExists('https://play.pokemonshowdown.com/sprites/gen5/' + imgName + '.png')) {
-            pokeImg = 'https://play.pokemonshowdown.com/sprites/gen5/' + imgName + '.png';
-        } else if (await this.imgValidatorService.checkImageExists('https://play.pokemonshowdown.com/sprites/dex/' + imgName.replace('-', '') + '.png')) {
-            pokeImg = 'https://play.pokemonshowdown.com/sprites/dex/' + imgName.replace('-', '') + '.png';
-        } else if( imgName == 'tauros-paldea-aqua' || imgName == 'tauros-paldea-blaze' || imgName == 'tauros-paldea-combat' ) {
-            imgName = imgName.replace(/-(?=[^-]*$)/, '');
-            pokeImg = 'https://play.pokemonshowdown.com/sprites/gen5/' + imgName + '.png';
-        }
-        
-        // Crear el objeto con la información extraída
-        return {
-            nickname,
-            species,
-            pokeImg,
-            item,
-            ability,
-            level,
-            shiny, // Agregar la propiedad shiny
-            teraType,
-            evs,
-            nature,
-            ivs: ivsLine,
-            moves
-        };
-      }));
-
-      data = {
-        'team_name': team.teamName,
-        'url_paste': team.urlPaste,
-        'url_json': team.urlPaste+'/json',
-        'pokemons': pokemonArray,
-        'desc_uso': team.descUso,
-        'tournament_using': team.tournamentUsing,
-        'mus_fav': team.musFav,
-        'counters': team.counters,
-        'damage_calcs': team.damageCalcs,
-        'is_public': team.isPublic,
-        'format_id': team.formatId,
-        'user_id': team.userId,
-        'subFormatId': team.subformat.id,
-        'subFormatName': team.subformat.subFormatName,
-        'subFormatDesc': team.subformat.abrevSubFormat
-      }
+      data = await this.getDetailTeam(teamJson, team);
   
       salida = [{
         data: data,
@@ -272,119 +164,7 @@ export class TeamsResolver {
       if(team){
         const teamJson = await this.getTeamJson(team.urlPaste+'/json');
 
-        // Separar los bloques de información para cada Pokémon
-        const pokemonBlocks = teamJson.paste.trim().split(/\n\s*(?=[^\n]+ @ )/);
-
-        // Procesar cada bloque para extraer los detalles del Pokémon
-        const pokemonArray = await Promise.all(pokemonBlocks.map(async block => {
-            const lines = block.split('\n');
-
-            // Extraer el nombre y la especie
-            const [nameSpecies, item] = lines[0].split(' @ ');
-            let nickname, species;
-
-            let speciesName = nameSpecies.replace('(M)','');
-            speciesName = speciesName.replace('(F)','');
-
-            // Verificar si hay un apodo (nickname) o no
-            const nicknameMatch = speciesName.match(/(.+?) \((.+)\)/);
-            if (nicknameMatch) {
-                // Si hay un apodo
-                [nickname, species] = nicknameMatch.slice(1, 3);
-            } else {
-                // Si no hay apodo, tomar directamente la especie
-                nickname = null; // No tiene apodo
-                species = nameSpecies;
-            }
-
-            // Extraer la habilidad
-            const ability = lines[1].replace('Ability: ', '');
-
-            // Extraer el nivel
-            const level = parseInt(lines[2].replace('Level: ', ''), 10);
-            
-            // Inicializar variable shiny
-            let shiny = false;
-
-            // Verificar si la línea "Shiny" está presente
-            const shinyIndex = lines.findIndex(line => line.startsWith('Shiny:'));
-            if (shinyIndex !== -1) {
-                const shinyLine = lines[shinyIndex].replace('Shiny: ', '').trim();
-                shiny = shinyLine.toLowerCase() === 'yes'; // Convertir a booleano
-            }
-
-            // Extraer el tipo Tera
-            const teraTypeIndex = shinyIndex !== -1 ? shinyIndex + 1 : 3; // Ajustar índice si hay línea Shiny
-            const teraType = lines[teraTypeIndex].replace('Tera Type: ', '');
-
-            // Extraer los EVs
-            const evsIndex = shinyIndex !== -1 ? shinyIndex + 2 : 4; // Ajustar índice si hay línea Shiny
-            const evs = lines[evsIndex].replace('EVs: ', '');
-
-            // Extraer la naturaleza
-            const natureIndex = shinyIndex !== -1 ? shinyIndex + 3 : 5; // Ajustar índice si hay línea Shiny
-            const nature = lines[natureIndex].replace(' Nature', '');
-
-            // Extraer los IVs si están presentes
-            const ivsLineIndex = shinyIndex !== -1 ? shinyIndex + 4 : 6; // Ajustar índice si hay línea Shiny
-            const ivsLine = lines[ivsLineIndex] && lines[ivsLineIndex].startsWith('IVs: ') ? lines[ivsLineIndex].replace('IVs: ', '') : null;
-
-            // Extraer los movimientos
-            const movesStartIndex = ivsLine ? (shinyIndex !== -1 ? shinyIndex + 5 : 7) : (shinyIndex !== -1 ? shinyIndex + 4 : 6);
-            const moves = lines.slice(movesStartIndex).map(line => line.replace('- ', '').trim());
-
-            let pokeImg = '';
-
-            let imgName = species.trim().toLowerCase();
-            imgName = imgName.replace('(m)', '');
-            imgName = imgName.replace('(f)', '');
-            imgName = imgName.trim();
-
-            // Comprobar si la imagen existe en las diferentes URLs
-            if (await this.imgValidatorService.checkImageExists('https://play.pokemonshowdown.com/sprites/gen5/' + imgName + '.png')) {
-                pokeImg = 'https://play.pokemonshowdown.com/sprites/gen5/' + imgName + '.png';
-            } else if (await this.imgValidatorService.checkImageExists('https://play.pokemonshowdown.com/sprites/dex/' + imgName.replace('-', '') + '.png')) {
-                pokeImg = 'https://play.pokemonshowdown.com/sprites/dex/' + imgName.replace('-', '') + '.png';
-            } else if( imgName == 'tauros-paldea-aqua' || imgName == 'tauros-paldea-blaze' || imgName == 'tauros-paldea-combat' ) {
-                imgName = imgName.replace(/-(?=[^-]*$)/, '');
-                pokeImg = 'https://play.pokemonshowdown.com/sprites/gen5/' + imgName + '.png';
-            }
-            
-            // Crear el objeto con la información extraída
-            return {
-                nickname,
-                species,
-                pokeImg,
-                item,
-                ability,
-                level,
-                shiny, // Agregar la propiedad shiny
-                teraType,
-                evs,
-                nature,
-                ivs: ivsLine,
-                moves
-            };
-        }));
-
-              
-        data = {
-          'team_name': team.teamName,
-          'url_paste': team.urlPaste,
-          'url_json': team.urlPaste+'/json',
-          'pokemons': pokemonArray,
-          'desc_uso': team.descUso,
-          'tournament_using': team.tournamentUsing,
-          'mus_fav': team.musFav,
-          'counters': team.counters,
-          'damage_calcs': team.damageCalcs,
-          'is_public': team.isPublic,
-          'format_id': team.formatId,
-          'user_id': team.userId,
-          'subFormatId': team.subformat.id,
-          'subFormatName': team.subformat.subFormatName,
-          'subFormatDesc': team.subformat.abrevSubFormat
-        }
+        data = await this.getDetailTeam(teamJson, team);
     
         salida = [{
           data: data,
@@ -408,8 +188,6 @@ export class TeamsResolver {
       }];
     }
 
-    //verificar user id con el obtenido en el token, o en la query, verificar el quipo mediante id del teamm e id del usuario, aplicar lo mismo para los teams y en modulo pokes
-    
     return salida;
   }
 
@@ -519,6 +297,132 @@ export class TeamsResolver {
     }
 
     return salida;
+  }
+
+  async getDetailTeam(teamJson: any, team: any){
+    // Separar los bloques de información para cada Pokémon
+    const pokemonBlocks = teamJson.paste.trim().split(/\n\s*(?=[^\n]+ @ )/);
+
+    // Procesar cada bloque para extraer los detalles del Pokémon
+    const pokemonArray = await Promise.all(pokemonBlocks.map(async block => {
+      const lines = block.split('\n');
+
+      // Extraer el nombre y la especie
+      const [nameSpecies, item] = lines[0].split(' @ ');
+      let nickname, species;
+
+      let speciesName = nameSpecies.replace('(M)','');
+      speciesName = speciesName.replace('(F)','');
+
+      // Verificar si hay un apodo (nickname) o no
+      const nicknameMatch = speciesName.match(/(.+?) \((.+)\)/);
+      if (nicknameMatch) {
+          // Si hay un apodo
+          [nickname, species] = nicknameMatch.slice(1, 3);
+      } else {
+          // Si no hay apodo, tomar directamente la especie
+          nickname = null; // No tiene apodo
+          species = nameSpecies;
+      }
+
+      // Extraer la habilidad
+      const ability = lines[1].replace('Ability: ', '');
+
+      // Extraer el nivel
+      const level = parseInt(lines[2].replace('Level: ', ''), 10);
+      
+      // Inicializar variable shiny
+      let shiny = false;
+
+      // Verificar si la línea "Shiny" está presente
+      const shinyIndex = lines.findIndex(line => line.startsWith('Shiny:'));
+      if (shinyIndex !== -1) {
+          const shinyLine = lines[shinyIndex].replace('Shiny: ', '').trim();
+          shiny = shinyLine.toLowerCase() === 'yes'; // Convertir a booleano
+      }
+
+      // Extraer el tipo Tera
+      const teraTypeIndex = shinyIndex !== -1 ? shinyIndex + 1 : 3; // Ajustar índice si hay línea Shiny
+      const teraType = lines[teraTypeIndex].replace('Tera Type: ', '');
+
+      // Extraer los EVs
+      const evsIndex = shinyIndex !== -1 ? shinyIndex + 2 : 4; // Ajustar índice si hay línea Shiny
+      const evs = lines[evsIndex].replace('EVs: ', '');
+
+      // Extraer la naturaleza
+      const natureIndex = shinyIndex !== -1 ? shinyIndex + 3 : 5; // Ajustar índice si hay línea Shiny
+      const nature = lines[natureIndex].replace(' Nature', '');
+
+      // Extraer los IVs si están presentes
+      const ivsLineIndex = shinyIndex !== -1 ? shinyIndex + 4 : 6; // Ajustar índice si hay línea Shiny
+      const ivsLine = lines[ivsLineIndex] && lines[ivsLineIndex].startsWith('IVs: ') ? lines[ivsLineIndex].replace('IVs: ', '') : null;
+
+      // Extraer los movimientos
+      const movesStartIndex = ivsLine ? (shinyIndex !== -1 ? shinyIndex + 5 : 7) : (shinyIndex !== -1 ? shinyIndex + 4 : 6);
+      const moves = lines.slice(movesStartIndex).map(line => line.replace('- ', '').trim());
+
+      let pokeImg = '';
+
+      let imgName = species.trim().toLowerCase();
+      imgName = imgName.replace('(m)', '');
+      imgName = imgName.replace('(f)', '');
+      imgName = imgName.trim();
+
+      // Comprobar si la imagen existe en las diferentes URLs
+      if (await this.imgValidatorService.checkImageExists('https://play.pokemonshowdown.com/sprites/gen5/' + imgName + '.png')) {
+        pokeImg = 'https://play.pokemonshowdown.com/sprites/gen5/' + imgName + '.png';
+      } else if (await this.imgValidatorService.checkImageExists('https://play.pokemonshowdown.com/sprites/dex/' + imgName.replace('-', '') + '.png')) {
+        pokeImg = 'https://play.pokemonshowdown.com/sprites/dex/' + imgName.replace('-', '') + '.png';
+      } else if( imgName == 'tauros-paldea-aqua' || imgName == 'tauros-paldea-blaze' || imgName == 'tauros-paldea-combat' || imgName == 'urshifu-rapid-strike' ) {
+        imgName = imgName.replace(/-(?=[^-]*$)/, '');
+        pokeImg = 'https://play.pokemonshowdown.com/sprites/gen5/' + imgName + '.png';
+      } else if (imgName.includes('iron')) {
+        imgName = imgName.replace(' ', '');
+        pokeImg = 'https://play.pokemonshowdown.com/sprites/gen5/' + imgName + '.png';
+      }else if (this.paradoxPastPokes.includes(imgName)) {
+        imgName = imgName.replace(' ', '');
+        pokeImg = 'https://play.pokemonshowdown.com/sprites/gen5/' + imgName + '.png';
+      }else if ( imgName.includes('necrozma-')){
+        imgName = imgName.replace(/-(?=[^-]*$)/, '');
+        pokeImg = 'https://play.pokemonshowdown.com/sprites/gen5/' + imgName + '.png';
+      }
+      
+      // Crear el objeto con la información extraída
+      return {
+          nickname,
+          species,
+          pokeImg,
+          item,
+          ability,
+          level,
+          shiny, // Agregar la propiedad shiny
+          teraType,
+          evs,
+          nature,
+          ivs: ivsLine,
+          moves
+      };
+    }));
+
+    const data = {
+      'team_name': team.teamName,
+      'url_paste': team.urlPaste,
+      'url_json': team.urlPaste+'/json',
+      'pokemons': pokemonArray,
+      'desc_uso': team.descUso,
+      'tournament_using': team.tournamentUsing,
+      'mus_fav': team.musFav,
+      'counters': team.counters,
+      'damage_calcs': team.damageCalcs,
+      'is_public': team.isPublic,
+      'format_id': team.formatId,
+      'user_id': team.userId,
+      'subFormatId': team.subformat.id,
+      'subFormatName': team.subformat.subFormatName,
+      'subFormatDesc': team.subformat.abrevSubFormat
+    };
+
+    return data;
   }
 
 }
