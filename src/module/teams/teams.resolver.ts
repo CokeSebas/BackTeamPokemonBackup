@@ -7,6 +7,7 @@ import { HttpService } from "@nestjs/axios";
 import { ImageValidatorService } from "../common/img-validator/img-validator.service";
 import { JwtTokenService } from "../common/jwt-token/jwt-token.service";
 import { UpdateTeamDto } from "./dto/update-team.dto";
+import { on } from "events";
 
 @Injectable()
 export class TeamsResolver {
@@ -27,7 +28,12 @@ export class TeamsResolver {
 
     const team = await this.teamsService.create(createTeamDto);
 
+    console.log(team);
+
     if(team){
+      
+      await this.actualizarPokes();
+
       salida = [{
         message: 'Team created',
         status: 'success',
@@ -57,15 +63,21 @@ export class TeamsResolver {
         'team_name': element.teamName,
         'url_paste': element.urlPaste,
         'format_id': element.formatId,
-        'desc_uso': element.descUso,
-        'tournament_using': element.tournamentUsing,
-        'mus_fav': element.musFav,
-        'counters': element.counters,
-        'damage_calcs': element.damageCalcs,
+        //'desc_uso': element.descUso,
+        //'tournament_using': element.tournamentUsing,
+        //'mus_fav': element.musFav,
+        //'counters': element.counters,
+        //'damage_calcs': element.damageCalcs,
         'subFormatId': element.subformat.id,
         'subFormatName': element.subformat.subFormatName,
-        'subFormatDesc': element.subformat.abrevSubFormat
-        //'user_id': element.userId
+        'subFormatDesc': element.subformat.abrevSubFormat,
+        //'user_id': element.userId,
+        "poke1": element.poke1, 
+        "poke2": element.poke2, 
+        "poke3": element.poke3, 
+        "poke4": element.poke4, 
+        "poke5": element.poke5, 
+        "poke6": element.poke6, 
       }
 
       datos.push(aux);
@@ -103,8 +115,14 @@ export class TeamsResolver {
           'damage_calcs': element.damageCalcs,
           'subFormatId': element.subformat.id,
           'subFormatName': element.subformat.subFormatName,
-          'subFormatDesc': element.subformat.abrevSubFormat
-          //'user_id': element.userId
+          'subFormatDesc': element.subformat.abrevSubFormat,
+          //'user_id': element.userId,
+           "poke1": element.poke1, 
+          "poke2": element.poke2, 
+          "poke3": element.poke3, 
+          "poke4": element.poke4, 
+          "poke5": element.poke5, 
+          "poke6": element.poke6, 
         }
   
         datos.push(aux);
@@ -130,7 +148,7 @@ export class TeamsResolver {
     let salida = [], data = {};
   
     if(team){
-      const teamJson = await this.getTeamJson(team.urlPaste+'/json');
+      const teamJson = await this.getTeamJson(team.urlPaste.trim()+'/json');
 
       data = await this.getDetailTeam(teamJson, team);
   
@@ -162,7 +180,7 @@ export class TeamsResolver {
 
     if(team.userId == idUser.userId){
       if(team){
-        const teamJson = await this.getTeamJson(team.urlPaste+'/json');
+        const teamJson = await this.getTeamJson(team.urlPaste.trim()+'/json');
 
         data = await this.getDetailTeam(teamJson, team);
     
@@ -212,7 +230,13 @@ export class TeamsResolver {
         //'user_id': element.userId
         'subFormatId': element.subformat.id,
         'subFormatName': element.subformat.subFormatName,
-        'subFormatDesc': element.subformat.abrevSubFormat
+        'subFormatDesc': element.subformat.abrevSubFormat,
+        "poke1": element.poke1, 
+        "poke2": element.poke2, 
+        "poke3": element.poke3, 
+        "poke4": element.poke4, 
+        "poke5": element.poke5, 
+        "poke6": element.poke6, 
       }
 
       datos.push(aux);
@@ -299,7 +323,7 @@ export class TeamsResolver {
     return salida;
   }
 
-  async getDetailTeam(teamJson: any, team: any){
+  async getDetailTeam(teamJson: any, team: any, onlyImages = false) {
     // Separar los bloques de información para cada Pokémon
     const pokemonBlocks = teamJson.paste.trim().split(/\n\s*(?=[^\n]+ @ )/);
 
@@ -387,42 +411,96 @@ export class TeamsResolver {
         pokeImg = 'https://play.pokemonshowdown.com/sprites/gen5/' + imgName + '.png';
       }
       
-      // Crear el objeto con la información extraída
-      return {
-          nickname,
-          species,
-          pokeImg,
-          item,
-          ability,
-          level,
-          shiny, // Agregar la propiedad shiny
-          teraType,
-          evs,
-          nature,
-          ivs: ivsLine,
-          moves
-      };
+      if(onlyImages){
+        return {
+            //species,
+            pokeImg,
+        };
+      }else{
+        // Crear el objeto con la información extraída
+        return {
+            nickname,
+            species,
+            pokeImg,
+            item,
+            ability,
+            level,
+            shiny, // Agregar la propiedad shiny
+            teraType,
+            evs,
+            nature,
+            ivs: ivsLine,
+            moves
+        };
+      }
     }));
 
-    const data = {
-      'team_name': team.teamName,
-      'url_paste': team.urlPaste,
-      'url_json': team.urlPaste+'/json',
-      'pokemons': pokemonArray,
-      'desc_uso': team.descUso,
-      'tournament_using': team.tournamentUsing,
-      'mus_fav': team.musFav,
-      'counters': team.counters,
-      'damage_calcs': team.damageCalcs,
-      'is_public': team.isPublic,
-      'format_id': team.formatId,
-      'user_id': team.userId,
-      'subFormatId': team.subformat.id,
-      'subFormatName': team.subformat.subFormatName,
-      'subFormatDesc': team.subformat.abrevSubFormat
-    };
+    let data = {};
 
+    if (onlyImages) {
+      data = pokemonArray
+    }else{
+      data = {
+        'team_name': team.teamName,
+        'url_paste': team.urlPaste,
+        'url_json': team.urlPaste+'/json',
+        'pokemons': pokemonArray,
+        'desc_uso': team.descUso,
+        'tournament_using': team.tournamentUsing,
+        'mus_fav': team.musFav,
+        'counters': team.counters,
+        'damage_calcs': team.damageCalcs,
+        'is_public': team.isPublic,
+        'format_id': team.formatId,
+        'user_id': team.userId,
+        'subFormatId': team.subformat.id,
+        'subFormatName': team.subformat.subFormatName,
+        'subFormatDesc': team.subformat.abrevSubFormat
+      };
+
+    }
     return data;
+  }
+
+  async actualizarPokes(){
+    console.log('actualizando pokes');
+    let salida = [];
+    try {
+      let teams = await this.teamsService.getallTeamsUpdate();
+
+      //return teams;
+
+      
+      for await (const team of teams) {
+        const teamJson = await this.getTeamJson(team.urlPaste.trim()+'/json');
+
+        let data = await this.getDetailTeam(teamJson, team, true);
+        //console.log(data[0]);
+        //console.log(team.id);
+        
+        let aux = {
+          'id': team.id,
+          'poke1': data[0].pokeImg,
+          'poke2': data[1].pokeImg,
+          'poke3': data[2].pokeImg,
+          'poke4': data[3].pokeImg,
+          'poke5': data[4].pokeImg,
+          'poke6': data[5].pokeImg,
+        }
+
+        //console.log(aux);
+
+        await this.teamsService.updateTeamPokes(team.id, data[0].pokeImg, data[1].pokeImg, data[2].pokeImg, data[3].pokeImg, data[4].pokeImg, data[5].pokeImg);
+
+        salida.push(aux);
+      }
+      
+      return salida;
+      
+    } catch (error) {
+      throw new Error(error);
+      
+    }
   }
 
 }

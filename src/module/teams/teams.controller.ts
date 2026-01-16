@@ -72,4 +72,12 @@ export class TeamsController {
   remove(@Param('id') id: string) {
     return this.teamsService.remove(+id);
   }
+
+
+  @Get('/teams/actualizarPokes/')
+  async getActualizarPokes(@Res() res: Response) {
+    this.logger.log('(C) Actualizando pokes', TeamsController.name);
+    const salida = await this.teamsResolver.actualizarPokes();
+    return res.status(200).json(salida);
+  }
 }

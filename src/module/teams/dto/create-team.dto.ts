@@ -36,4 +36,17 @@ export class CreateTeamDto {
 
   @IsInt()
   subFormatId: number;
+
+  @IsString()
+  poke1?: string;
+  @IsString()
+  poke2?: string;
+  @IsString()
+  poke3?: string;
+  @IsString()
+  poke4?: string;
+  @IsString()
+  poke5?: string;
+  @IsString()
+  poke6?: string;
 }

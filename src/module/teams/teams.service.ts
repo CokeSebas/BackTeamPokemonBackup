@@ -35,6 +35,8 @@ export class TeamsService {
       subformat,
     });
 
+    this.getallTeamsUpdate();
+
     return this.teamRepository.save(team);
   }
 
@@ -110,4 +112,32 @@ export class TeamsService {
   remove(id: number) {
     return `This action removes a #${id} team`;
   }
+
+  async getallTeamsUpdate() {
+    this.logger.log('(S) Getting all teams: ', TeamsService.name);
+    return await this.teamRepository
+    .createQueryBuilder('team')
+    .where('team.poke1 IS NULL ')
+    .orderBy('team.date_created', 'DESC')
+    .getMany();
+    //return this.teamRepository.find();
+  }
+
+  async updateTeamPokes(teamId: number, poke1: string, poke2: string, poke3: string, poke4: string, poke5: string, poke6: string): Promise<void> {
+    this.logger.log('(S) Updating team pokes: '+teamId, TeamsService.name);
+    await this.teamRepository
+      .createQueryBuilder()
+      .update(Teams)
+      .set({
+        poke1: poke1,
+        poke2: poke2,
+        poke3: poke3,
+        poke4: poke4,
+        poke5: poke5,
+        poke6: poke6,
+      })
+      .where('id = :id', { id: teamId })
+      .execute();
+  }
+
 }

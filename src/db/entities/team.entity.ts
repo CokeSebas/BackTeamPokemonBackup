@@ -44,4 +44,22 @@ export class Teams {
   @JoinColumn({ name: 'sub_format_id' })
   subformat: SubFormat;
 
+  @Column({name: 'poke1'})
+  poke1: string;
+
+  @Column({name: 'poke2'})
+  poke2: string;
+
+  @Column({name: 'poke3'})
+  poke3: string;
+
+  @Column({name: 'poke4'})
+  poke4: string;
+
+  @Column({name: 'poke5'})
+  poke5: string;
+
+  @Column({name: 'poke6'})
+  poke6: string;
+
 }

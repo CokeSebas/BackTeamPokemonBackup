@@ -15,8 +15,8 @@ export class MailService {
       port: 465,
       secure: true, // Usar SSL
       auth: {
-        user: "teamsbackupokemon@gmail.com", // tu correo
-        pass: "zwrlgimhbhvxgwis", // tu contraseña o token de acceso
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
       },
     });
   }

@@ -9,6 +9,8 @@ import { TeamsModule } from './module/teams/teams.module';
 import { PokemonModule } from './module/pokemon/pokemon.module';
 import { FormatsModule } from './module/formats/formats.module';
 import { SubFormatsModule } from './module/subFormats/subFormats.module';
+//import { TournamentsModule } from './module/tournaments/tournaments.module';
+//import { PointsperpositionModule } from './module/pointsperposition/pointsperposition.module';
 
 
 @Module({
@@ -36,7 +38,9 @@ import { SubFormatsModule } from './module/subFormats/subFormats.module';
     TeamsModule,
     PokemonModule,
     FormatsModule,
-    SubFormatsModule
+    SubFormatsModule,
+    //TournamentsModule,
+    //PointsperpositionModule
   ],
   controllers: [
     AppController
