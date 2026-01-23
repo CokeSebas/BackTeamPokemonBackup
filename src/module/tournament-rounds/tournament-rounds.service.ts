@@ -1,0 +1,160 @@
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { CreateTournamentRoundDto } from './dto/create-tournament-round.dto';
+import { UpdateTournamentRoundDto } from './dto/update-tournament-round.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+
+import { TournamentRoundEntity } from '../../db/entities/tournament-round.entity';
+import { TournamentPairingEntity } from '../../db/entities/tournament-pairing.entity';
+import { DataSource, Repository } from 'typeorm';
+import * as cheerio from 'cheerio';
+
+@Injectable()
+export class TournamentRoundsService {
+  constructor(
+    @InjectRepository(TournamentRoundEntity)
+    private readonly roundRepo: Repository<TournamentRoundEntity>,
+
+    @InjectRepository(TournamentPairingEntity)
+    private readonly pairingRepo: Repository<TournamentPairingEntity>,
+
+    private readonly dataSource: DataSource,
+  ) {}
+
+  async parseAndSave(html: string, idTorneo: number) {
+    const $ = cheerio.load(html);
+
+    // -----------------------------
+    // 🧠 Datos generales
+    // -----------------------------
+    const roundText = $('h3').first().text();
+    const roundNumber = Number(
+      roundText.match(/\d+/)?.[0],
+    );
+
+    if (!roundNumber) {
+      throw new BadRequestException(
+        'No se pudo detectar la ronda',
+      );
+    }
+
+    const category = $('h3').eq(1).text().trim();
+    if (!category) {
+      throw new BadRequestException(
+        'No se pudo detectar la categoría',
+      );
+    }
+
+    const generatedAtText = $(
+      'table.footer td',
+    )
+      .last()
+      .text()
+      .trim();
+
+    const generatedAt = generatedAtText
+      ? new Date(generatedAtText)
+      : null;
+
+
+    // -----------------------------
+    // 🆚 Emparejamientos
+    // -----------------------------
+    const pairings: Partial<TournamentPairingEntity>[] =
+      [];
+
+    const usedTables = new Set<number>();
+
+    $('table.report tr')
+      .slice(1)
+      .each((_, row) => {
+        const cols = $(row).find('td');
+        if (cols.length < 4) return;
+
+        const tableNumber = Number(
+          $(cols[0]).text().trim(),
+        );
+
+        if (usedTables.has(tableNumber)) return;
+        usedTables.add(tableNumber);
+
+        const playerText = $(cols[1])
+          .text()
+          .trim();
+        const opponentText = $(cols[3])
+          .text()
+          .trim();
+
+        pairings.push({
+          tableNumber,
+          playerName: this.extractName(playerText),
+          playerRecord:
+            this.extractRecord(playerText),
+          opponentName:
+            this.extractName(opponentText),
+          opponentRecord:
+            this.extractRecord(opponentText),
+        });
+      });
+
+    if (!pairings.length) {
+      throw new BadRequestException(
+        'No se encontraron emparejamientos',
+      );
+    }
+
+    // -----------------------------
+    // 💾 Guardado con transacción
+    // -----------------------------
+    return this.dataSource.transaction(
+      async manager => {
+        const round = manager.create(
+          TournamentRoundEntity,
+          {
+            tournamentId: idTorneo,
+            roundNumber,
+            category,
+            generatedAt,
+            pairings,
+          },
+        );
+
+        await manager.save(round);
+
+        return {
+          roundId: round.id,
+          roundNumber,
+          category,
+          pairings: pairings.length,
+        };
+      },
+    );
+  }
+
+
+  async findLatestRound(tournamentId: number) {
+    return this.roundRepo.findOne({
+      where: {
+        tournamentId,
+      },
+      relations: {
+        pairings: true,
+      },
+      order: {
+        roundNumber: 'DESC',
+      },
+    });
+  }
+
+
+  // -----------------------------
+  // 🔧 Helpers
+  // -----------------------------
+  private extractName(text: string): string {
+    return text.split('(')[0].trim();
+  }
+
+  private extractRecord(text: string): string | null {
+    const match = text.match(/\((\d+\/\d+\/\d+\s*\(\d+\))\)$/)
+    return match ? match[1] : null
+  }
+}
