@@ -32,9 +32,9 @@ import { TournamentStandingModule } from './module/tournamet-standing/tournament
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: false, // No usar en producción, ya que sincroniza los cambios en las entidades automáticamente
       logging: false,  // Habilitar logging de BD
-      //ssl: {
-      //  rejectUnauthorized: false, // Evita la verificación de certificados, útil para pruebas
-      //},
+      ssl: {
+        rejectUnauthorized: false, // Evita la verificación de certificados, útil para pruebas
+      },
     }),
     CommonModule,
     UsersModule,
