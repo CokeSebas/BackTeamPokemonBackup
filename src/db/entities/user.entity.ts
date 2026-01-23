@@ -44,7 +44,10 @@ export class User {
 
   @Column({ type: 'boolean', default: true, name: 'is_active' })
   isActive: boolean;
-
+  
   @Column({name: 'nick_name'})
   nickName: string;
+  
+  @Column({ type: 'boolean', default: true, name: 'is_organizer' })
+  isOrganizer: boolean;
 }

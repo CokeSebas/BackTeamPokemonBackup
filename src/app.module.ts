@@ -9,8 +9,11 @@ import { TeamsModule } from './module/teams/teams.module';
 import { PokemonModule } from './module/pokemon/pokemon.module';
 import { FormatsModule } from './module/formats/formats.module';
 import { SubFormatsModule } from './module/subFormats/subFormats.module';
-//import { TournamentsModule } from './module/tournaments/tournaments.module';
-//import { PointsperpositionModule } from './module/pointsperposition/pointsperposition.module';
+import { TournamentsModule } from './module/tournaments/tournaments.module';
+import { TournamentRoundModule } from './module/tournament-rounds/tournament-rounds.module';
+import { TournamentPairingsModule } from './module/tournament-pairings/tournament-pairings.module';
+import { TournamentResultsModule } from './module/tournament-results/tournament-results.module';
+import { TournamentStandingModule } from './module/tournamet-standing/tournament-standing.module';
 
 
 @Module({
@@ -29,9 +32,9 @@ import { SubFormatsModule } from './module/subFormats/subFormats.module';
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: false, // No usar en producción, ya que sincroniza los cambios en las entidades automáticamente
       logging: false,  // Habilitar logging de BD
-      ssl: {
-        rejectUnauthorized: false, // Evita la verificación de certificados, útil para pruebas
-      },
+      //ssl: {
+      //  rejectUnauthorized: false, // Evita la verificación de certificados, útil para pruebas
+      //},
     }),
     CommonModule,
     UsersModule,
@@ -39,8 +42,11 @@ import { SubFormatsModule } from './module/subFormats/subFormats.module';
     PokemonModule,
     FormatsModule,
     SubFormatsModule,
-    //TournamentsModule,
-    //PointsperpositionModule
+    TournamentsModule,
+    TournamentRoundModule,
+    TournamentPairingsModule,
+    TournamentResultsModule,
+    TournamentStandingModule
   ],
   controllers: [
     AppController

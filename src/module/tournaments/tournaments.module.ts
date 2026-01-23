@@ -4,6 +4,7 @@ import { TournamentsController } from './tournaments.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Tournaments } from '../../db/entities/tournaments.entity';
 import { MyLoggerService } from '../common/logger/myLogger.service';
+import { TournamentResolver } from './tournament.resolver';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { MyLoggerService } from '../common/logger/myLogger.service';
     ])
   ],
   controllers: [TournamentsController],
-  providers: [TournamentsService, MyLoggerService],
+  providers: [TournamentsService, MyLoggerService, TournamentResolver],
+  exports: [TournamentResolver],
 })
 export class TournamentsModule {}

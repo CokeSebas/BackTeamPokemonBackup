@@ -160,7 +160,8 @@ export class UsersResolver {
           'lastName': user.lastName,
           'email': user.email,
           'avatarUrl': avatarUrl,
-          'nickName': user.nickName
+          'nickName': user.nickName,
+          "isOrganizer": user.isOrganizer,
         };
   
         salida = [{
@@ -329,6 +330,7 @@ export class UsersResolver {
       return salida;
     }
 
+    ///agregar si el usuario es admin o no
     const token = await this.jwtTokenService.createToken('userId',user.id);
 
     data = {

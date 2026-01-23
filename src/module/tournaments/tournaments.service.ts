@@ -13,6 +13,17 @@ export class TournamentsService {
     private readonly logger: MyLoggerService
   ) { }
 
+  async create(createTournamentDto): Promise<Object> {
+    this.logger.log('(S) Creating tournament', TournamentsService.name);
+    const tournament = this.tournamentRepository.create(createTournamentDto);
+    return this.tournamentRepository.save(tournament);
+  }
+
+  async getTournamentsByUser(userId: number) {
+    this.logger.log('(S) Fetching tournaments by user: '+userId, TournamentsService.name);
+    return this.tournamentRepository.find({ where: { userId } });
+  }
+
   async findAll() {
     this.logger.log('(S) Find all tournaments', TournamentsService.name);
     return this.tournamentRepository.find();

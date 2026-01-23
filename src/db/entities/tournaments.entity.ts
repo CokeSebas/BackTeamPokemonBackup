@@ -1,3 +1,4 @@
+import { IsInt } from "class-validator";
 import { Entity, Column, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
@@ -8,10 +9,14 @@ export class Tournaments {
   @Column({name: 'nombre'})
   nombre: string;
 
-  @Column()
-  descripcion: string;
+  @Column({ type: 'integer' })
+  tipo_torneo: number;
 
   @Column()
-  bfl: number;
+  fecha_torneo: Date;
+
+  @IsInt()
+  @Column({name: 'user_id'})
+  userId: number;
 
 }

@@ -39,6 +39,7 @@ async function bootstrap() {
   //npm run build
   //gcloud app deploy
   
+  //correr localmente 
   //npm run start:dev
 }
 bootstrap();
