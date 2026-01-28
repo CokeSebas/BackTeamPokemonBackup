@@ -119,10 +119,13 @@ export class UsersResolver {
 
     users.forEach(element => {
       let aux = {
+        'id': element.id,
         'name': element.name,
         'lastName': element.lastName,
         'email': element.email,
         'avatarUrl': element.avatarUrl,
+        'nickName': element.nickName,
+        "isOrganizer": element.isOrganizer,
       }
 
       datos.push(aux);
@@ -152,7 +155,7 @@ export class UsersResolver {
         if(user.avatarUrl != ''){
           avatarUrl = user.avatarUrl;
         }else{
-          avatarUrl = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png';
+          avatarUrl = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT0LY6fD3PfS3Vv6fzibjBVCWfO8TZ6bgJ6DA&s';
         }
         
         data = {
@@ -162,6 +165,7 @@ export class UsersResolver {
           'avatarUrl': avatarUrl,
           'nickName': user.nickName,
           "isOrganizer": user.isOrganizer,
+          "isAdmin": user.isAdmin,
         };
   
         salida = [{

@@ -19,4 +19,7 @@ export class Tournaments {
   @Column({name: 'user_id'})
   userId: number;
 
+  @Column({name: 'formato_torneo'})
+  formatoTorneo: number;
+
 }

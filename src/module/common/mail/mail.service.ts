@@ -24,7 +24,9 @@ export class MailService {
   async sendVerificationEmail(to: string, token: string) {
     this.logger.log('(S) Sending verification email', MailService.name);
 
-    const url = `${process.env.FRONTEND_URL}/verify-account?token=${token}`;
+    const url = `${process.env.FRONTEND_URL}verify-account?token=${token}`;
+
+    //console.log('Verification URL:', url);
 
     await this.transporter.sendMail({
       to,

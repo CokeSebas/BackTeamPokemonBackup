@@ -28,8 +28,8 @@ export class TournamentPairingEntity {
   @JoinColumn({ name: 'round_id' })
   round: TournamentRoundEntity;
 
-  @Column({ name: 'table_number', type: 'int' })
-  tableNumber: number;
+  //@Column({ name: 'table_number', type: 'int' })
+  //tableNumber: number;
 
   @Column({ name: 'player_name', type: 'varchar', length: 150 })
   playerName: string;
@@ -52,6 +52,13 @@ export class TournamentPairingEntity {
     nullable: true,
   })
   opponentRecord?: string;
+
+  @Column({ name: 'is_bye', type: 'boolean', default: false })
+  isBye: boolean;
+
+  @Column({ name: 'table_number', type: 'int', nullable: true })
+  tableNumber: number | null;
+
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

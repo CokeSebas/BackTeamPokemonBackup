@@ -55,7 +55,6 @@ export class TournamentRoundsService {
       ? new Date(generatedAtText)
       : null;
 
-
     // -----------------------------
     // 🆚 Emparejamientos
     // -----------------------------
@@ -68,31 +67,63 @@ export class TournamentRoundsService {
       .slice(1)
       .each((_, row) => {
         const cols = $(row).find('td');
-        if (cols.length < 4) return;
+        if (cols.length < 2) return;
 
-        const tableNumber = Number(
-          $(cols[0]).text().trim(),
-        );
-
-        if (usedTables.has(tableNumber)) return;
-        usedTables.add(tableNumber);
+        const tableText = $(cols[0])
+          .text()
+          .trim();
 
         const playerText = $(cols[1])
           .text()
           .trim();
-        const opponentText = $(cols[3])
-          .text()
-          .trim();
+
+        const opponentText =
+          cols.length >= 4
+            ? $(cols[3]).text().trim()
+            : '';
+
+        /* ===============================
+          🟡 BYE / PASE AUTOMÁTICO
+        =============================== */
+        if (
+          tableText
+            .toLowerCase()
+            .includes('pase automático')
+        ) {
+          pairings.push({
+            tableNumber: null,
+            playerName:
+              this.extractName(playerText),
+            playerRecord:
+              this.extractRecord(playerText),
+            opponentName: null,
+            opponentRecord: null,
+            isBye: true,
+          });
+
+          return;
+        }
+
+        /* ===============================
+          🟢 MATCH NORMAL
+        =============================== */
+        const tableNumber = Number(tableText);
+        if (Number.isNaN(tableNumber)) return;
+
+        if (usedTables.has(tableNumber)) return;
+        usedTables.add(tableNumber);
 
         pairings.push({
           tableNumber,
-          playerName: this.extractName(playerText),
+          playerName:
+            this.extractName(playerText),
           playerRecord:
             this.extractRecord(playerText),
           opponentName:
             this.extractName(opponentText),
           opponentRecord:
             this.extractRecord(opponentText),
+          isBye: false,
         });
       });
 
@@ -129,6 +160,7 @@ export class TournamentRoundsService {
       },
     );
   }
+
 
 
   async findLatestRound(tournamentId: number) {

@@ -14,6 +14,8 @@ import { TournamentRoundModule } from './module/tournament-rounds/tournament-rou
 import { TournamentPairingsModule } from './module/tournament-pairings/tournament-pairings.module';
 import { TournamentResultsModule } from './module/tournament-results/tournament-results.module';
 import { TournamentStandingModule } from './module/tournamet-standing/tournament-standing.module';
+import { PokModule } from './module/pokemon-seeder/pok.module';
+import { TournamentTopPlayerModule } from './module/tournament-top-player/tournament-top-player.module';
 
 
 @Module({
@@ -46,7 +48,9 @@ import { TournamentStandingModule } from './module/tournamet-standing/tournament
     TournamentRoundModule,
     TournamentPairingsModule,
     TournamentResultsModule,
-    TournamentStandingModule
+    TournamentStandingModule,
+    PokModule,
+    TournamentTopPlayerModule
   ],
   controllers: [
     AppController

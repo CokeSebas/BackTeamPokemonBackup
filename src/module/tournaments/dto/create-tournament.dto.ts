@@ -12,4 +12,7 @@ export class CreateTournamentDto {
 
   @IsNumber()
   user_id: number; 
+
+  @IsString()
+  formato_torneo: string;
 }

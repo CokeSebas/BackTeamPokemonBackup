@@ -50,4 +50,7 @@ export class User {
   
   @Column({ type: 'boolean', default: true, name: 'is_organizer' })
   isOrganizer: boolean;
+  
+  @Column({ type: 'boolean', default: true, name: 'is_admin' })
+  isAdmin: boolean;
 }

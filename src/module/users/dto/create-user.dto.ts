@@ -27,4 +27,9 @@ export class CreateUserDto {
   @IsString()
   @IsOptional()
   nickName?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  isOrganizer?: boolean;
+
 }
