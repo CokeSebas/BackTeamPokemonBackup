@@ -43,6 +43,7 @@ export class TournamentTopPlayerController {
   async findByTournament(
     @Param('tournamentId', ParseIntPipe) tournamentId: number,
   ): Promise<TournamentTopPlayer[]> {
+    console.log('(C)Obteniendo tops para el torneo ID:', tournamentId);
     return this.topPlayerService.findByTournament(tournamentId);
   }
 }

@@ -39,4 +39,13 @@ export class TournamentsController {
 
     return res.status(salida[0].code).json(salida[0]);
   }
+
+  /**
+   * Retorna todos los torneos con su standing (si existe)
+   */
+  @Get('with-standing/:id')
+  async getTournamentsWithStanding(@Param('id') id: number) {
+    return this.tournamentsService.getTournamentWithStanding(id);
+  }
+  
 }

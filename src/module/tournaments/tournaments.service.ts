@@ -28,4 +28,18 @@ export class TournamentsService {
     this.logger.log('(S) Find all tournaments', TournamentsService.name);
     return this.tournamentRepository.find();
   }
+
+
+  async getTournamentWithStanding(tournamentId: number) {
+    return this.tournamentRepository
+      .createQueryBuilder('t')
+      .leftJoinAndSelect(
+        't.standings',
+        'ts',
+      )
+      .where('t.id = :tournamentId', { tournamentId })
+      .orderBy('ts.position', 'ASC')
+      .getOne();
+  }
+
 }
