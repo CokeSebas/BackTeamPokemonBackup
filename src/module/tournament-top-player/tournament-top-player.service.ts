@@ -137,8 +137,7 @@ export class TournamentTopPlayerService {
 
 
   async createTop(dto: CreateTournamentTopDto) {
-    const { tournamentId, players } = dto;
-
+    const { tournamentId, players, formatoTorneo } = dto;
     let position = 1;
 
     for (const player of players) {
@@ -147,7 +146,15 @@ export class TournamentTopPlayerService {
         where: player.pokemons.map((name) => ({ name })),
       });
 
-      if (pokemons.length !== 6) {
+
+      let minPokes = 0;
+      if(formatoTorneo === 'vgc'){
+        minPokes = 6;
+      }else{
+        minPokes = 1;
+      }
+
+      if (pokemons.length !== minPokes) {
         throw new BadRequestException(
           `Pokémon inválidos para ${player.name} ${player.lastName}`,
         );
