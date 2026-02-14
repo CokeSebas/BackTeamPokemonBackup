@@ -17,101 +17,92 @@ export class TournamentStandingService {
   ): Promise<void> {
     const $ = cheerio.load(htmlContent);
 
-    /* ===============================
-       Contexto general
-    =============================== */
-
     const roundLabel = $('h3').first().text().trim();
-    const category = $('h2').first().text().trim();
 
-    if (!roundLabel || !category) {
-      throw new BadRequestException(
-        'No se pudo obtener información de la ronda o categoría',
-      );
+    if (!roundLabel) {
+      throw new BadRequestException('No se pudo obtener la ronda');
     }
 
-    /* ===============================
-       Tabla de standings
-    =============================== */
-
-    const rows = $('table.report.border tr').slice(1); // saltar header
-
-    if (!rows.length) {
-      throw new BadRequestException(
-        'No se encontraron filas de standings en el HTML',
-      );
-    }
-
-    /* ===============================
-     🔥 Limpieza previa
-    =============================== */
-
+    // 🔥 Limpieza previa
     await this.standingRepo.delete({ tournamentId });
 
     const standings: TournamentStanding[] = [];
 
-    rows.each((_, row) => {
-      const cols = $(row).find('td');
+    const VALID_CATEGORIES = [
+      'Categoría Júnior',
+      'Categoría Sénior',
+      'Categoría Máster',
+    ];
 
-      const position = Number($(cols[0]).text().trim());
-      const playerName = $(cols[1]).text().trim();
-      const section = Number($(cols[2]).text().trim());
+    $('h2').each((_, h2) => {
+      const category = $(h2).text().trim();
 
-      const withdrawalText = $(cols[3]).text().trim();
-      const withdrawalRound =
-        withdrawalText === '' || withdrawalText === ' '
-          ? null
-          : Number(withdrawalText);
+      // ⛔ Ignorar categorías no válidas (ej: "Todas")
+      if (!VALID_CATEGORIES.includes(category)) return;
 
-      /* Historial: 1/0/0 (3) */
-      const historyText = $(cols[4]).text().trim();
-      const historyMatch = historyText.match(
-        /(\d+)\/(\d+)\/(\d+)\s*\((\d+)\)/,
-      );
+      // 📌 La tabla viene justo después del h2
+      const table = $(h2).nextAll('table.report.border').first();
+      const rows = table.find('tr').slice(1); // saltar header
 
-      if (!historyMatch) return;
+      rows.each((_, row) => {
+        const cols = $(row).find('td');
+        if (cols.length < 8) return;
 
-      const wins = Number(historyMatch[1]);
-      const losses = Number(historyMatch[2]);
-      const draws = Number(historyMatch[3]);
-      const points = Number(historyMatch[4]);
+        const position = Number($(cols[0]).text().trim());
+        const playerName = $(cols[1]).text().trim();
+        const section = Number($(cols[2]).text().trim());
 
-      const opponentWinPercentage = Number(
-        $(cols[6]).text().replace('%', '').trim(),
-      );
+        const withdrawalText = $(cols[3]).text().trim();
+        const withdrawalRound =
+          withdrawalText === '' || withdrawalText === '\u00a0'
+            ? null
+            : Number(withdrawalText);
 
-      const opponentOpponentWinPercentage = Number(
-        $(cols[7]).text().replace('%', '').trim(),
-      );
+        // 1/3/0 (3)
+        const historyText = $(cols[4]).text().trim();
+        const historyMatch = historyText.match(
+          /(\d+)\/(\d+)\/(\d+)\s*\((\d+)\)/,
+        );
+        if (!historyMatch) return;
 
-      const standing = this.standingRepo.create({
-        tournamentId,
-        position,
-        playerName,
-        section,
-        withdrawalRound,
-        wins,
-        losses,
-        draws,
-        points,
-        opponentWinPercentage,
-        opponentOpponentWinPercentage,
-        roundLabel,
-        category,
+        const wins = Number(historyMatch[1]);
+        const losses = Number(historyMatch[2]);
+        const draws = Number(historyMatch[3]);
+        const points = Number(historyMatch[4]);
+
+        const opponentWinPercentage = Number(
+          $(cols[6]).text().replace('%', '').trim(),
+        );
+
+        const opponentOpponentWinPercentage = Number(
+          $(cols[7]).text().replace('%', '').trim(),
+        );
+
+        standings.push(
+          this.standingRepo.create({
+            tournamentId,
+            position,
+            playerName,
+            section,
+            withdrawalRound,
+            wins,
+            losses,
+            draws,
+            points,
+            opponentWinPercentage,
+            opponentOpponentWinPercentage,
+            roundLabel,
+            category,
+          }),
+        );
       });
-
-      standings.push(standing);
     });
 
     if (!standings.length) {
       throw new BadRequestException(
-        'No se pudieron procesar los standings',
+        'No se encontraron standings válidos para registrar',
       );
     }
-
-    /* ===============================
-       Persistencia
-    =============================== */
 
     await this.standingRepo.save(standings);
   }

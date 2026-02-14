@@ -45,4 +45,16 @@ export class TournamentResolver {
     return salida;
   }
 
+  async getAllTournaments() {
+    console.log('Getting all tournaments');
+    const torneos = await this.tournamentsService.findAll();
+    let salida = [{
+      message: 'Torneos obtenidos correctamente',
+      status: 'success',
+      code: 200,
+      datos: torneos
+    }];
+    return salida;
+  }
+
 }

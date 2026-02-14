@@ -182,11 +182,20 @@ export class TournamentRoundsService {
   // 🔧 Helpers
   // -----------------------------
   private extractName(text: string): string {
-    return text.split('(')[0].trim();
+    if (!text) return '';
+
+    const clean = text.replace(/\u00A0/g, ' ').trim();
+    const idx = clean.indexOf('(');
+
+    return idx === -1 ? clean : clean.substring(0, idx).trim();
   }
 
   private extractRecord(text: string): string | null {
-    const match = text.match(/\((\d+\/\d+\/\d+\s*\(\d+\))\)$/)
-    return match ? match[1] : null
+    if (!text) return null;
+
+    const clean = text.replace(/\u00A0/g, ' ').trim();
+    const idx = clean.indexOf('(');
+
+    return idx === -1 ? null : clean.substring(idx).trim();
   }
 }

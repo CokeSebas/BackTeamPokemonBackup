@@ -146,18 +146,25 @@ export class TournamentTopPlayerService {
         where: player.pokemons.map((name) => ({ name })),
       });
 
+      switch (formatoTorneo) {
+        case 'vgc':
+          if (pokemons.length < 4 || pokemons.length > 6) {
+            throw new BadRequestException(
+              `Formato VG permite entre 4 y 6 Pokémon para ${player.name} ${player.lastName}`,
+            );
+          }
+          break;
 
-      let minPokes = 0;
-      if(formatoTorneo === 'vgc'){
-        minPokes = 6;
-      }else{
-        minPokes = 1;
-      }
+        case 'tcg':
+          if (pokemons.length < 1) {
+            throw new BadRequestException(
+              `Formato TCG requiere al menos 1 Pokémon para ${player.name} ${player.lastName}`,
+            );
+          }
+          break;
 
-      if (pokemons.length !== minPokes) {
-        throw new BadRequestException(
-          `Pokémon inválidos para ${player.name} ${player.lastName}`,
-        );
+        default:
+          throw new BadRequestException('Formato de torneo no soportado');
       }
 
       // 2️⃣ Crear jugador top

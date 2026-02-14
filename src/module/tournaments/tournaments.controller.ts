@@ -33,12 +33,23 @@ export class TournamentsController {
   }
 
   @Get('torneos-user/:id')
-  async getTournamentsByUser(@Res() res: Response, @Param('id') id: number) {
+  async getTournamentsByUser(
+    @Res() res: Response,
+    @Param('id') id: number,
+  ) {
     this.logger.log('(C) Getting tournaments by user: ', TournamentsController.name);
-    const salida = await this.tournamentResolver.getTournamentsByUser(id);
+
+    let salida;
+
+    if (Number(id) === 1) {
+      salida = await this.tournamentResolver.getAllTournaments();
+    } else {
+      salida = await this.tournamentResolver.getTournamentsByUser(id);
+    }
 
     return res.status(salida[0].code).json(salida[0]);
   }
+
 
   /**
    * Retorna todos los torneos con su standing (si existe)
