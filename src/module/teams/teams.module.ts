@@ -26,7 +26,7 @@ import { SubFormatsModule } from '../subFormats/subFormats.module';
   ],
   controllers: [TeamsController],
   providers: [TeamsService, TeamsResolver, MyLoggerService, ImageValidatorService, JwtTokenService],
-  exports: [TeamsResolver]
+  exports: [TeamsResolver, TeamsService]
 
 })
 

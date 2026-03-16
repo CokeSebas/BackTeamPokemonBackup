@@ -128,7 +128,7 @@ export class PokemonResolver {
 
     let idx = 0;
     for await (const element of pokemons) {
-      if(idx < 6) {
+      if(idx < 9) {
 
         let aux = {
           'name': element.name,

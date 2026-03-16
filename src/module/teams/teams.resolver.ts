@@ -28,7 +28,7 @@ export class TeamsResolver {
 
     const team = await this.teamsService.create(createTeamDto);
 
-    console.log(team);
+    //console.log(team);
 
     if(team){
       
@@ -324,143 +324,185 @@ export class TeamsResolver {
   }
 
   async getDetailTeam(teamJson: any, team: any, onlyImages = false) {
-    // Separar los bloques de información para cada Pokémon
-    const pokemonBlocks = teamJson.paste.trim().split(/\n\s*(?=[^\n]+ @ )/);
 
-    // Procesar cada bloque para extraer los detalles del Pokémon
-    const pokemonArray = await Promise.all(pokemonBlocks.map(async block => {
-      const lines = block.split('\n');
+    /* ===============================
+      NORMALIZAR ENTRADA (ORDEN LIBRE)
+    =============================== */
 
-      // Extraer el nombre y la especie
-      const [nameSpecies, item] = lines[0].split(' @ ');
-      let nickname, species;
+    let rawText = '';
 
-      let speciesName = nameSpecies.replace('(M)','');
-      speciesName = speciesName.replace('(F)','');
+    if (Array.isArray(teamJson.paste)) {
+      rawText = teamJson.paste.join('\n');
+    } else {
+      rawText = teamJson.paste;
+    }
 
-      // Verificar si hay un apodo (nickname) o no
-      const nicknameMatch = speciesName.match(/(.+?) \((.+)\)/);
-      if (nicknameMatch) {
-          // Si hay un apodo
-          [nickname, species] = nicknameMatch.slice(1, 3);
-      } else {
-          // Si no hay apodo, tomar directamente la especie
-          nickname = null; // No tiene apodo
-          species = nameSpecies;
-      }
+    // Normalizar saltos de línea
+    rawText = rawText.replace(/\r/g, '');
 
-      // Extraer la habilidad
-      const ability = lines[1].replace('Ability: ', '');
+    // Separar por Pokémon cuando detecta "Nombre @ Item"
+    const pokemonBlocks = rawText
+      .split(/\n(?=[^\n]+ @ )/)
+      .map(b => b.trim())
+      .filter(b => b.length > 0);
 
-      // Extraer el nivel
-      const level = parseInt(lines[2].replace('Level: ', ''), 10);
-      
-      // Inicializar variable shiny
-      let shiny = false;
+    const pokemonArray = await Promise.all(
+      pokemonBlocks.map(async (block) => {
 
-      // Verificar si la línea "Shiny" está presente
-      const shinyIndex = lines.findIndex(line => line.startsWith('Shiny:'));
-      if (shinyIndex !== -1) {
-          const shinyLine = lines[shinyIndex].replace('Shiny: ', '').trim();
-          shiny = shinyLine.toLowerCase() === 'yes'; // Convertir a booleano
-      }
+        const rawLines = block.split('\n');
 
-      // Extraer el tipo Tera
-      const teraTypeIndex = shinyIndex !== -1 ? shinyIndex + 1 : 3; // Ajustar índice si hay línea Shiny
-      const teraType = lines[teraTypeIndex].replace('Tera Type: ', '');
+        // Limpiar líneas, eliminar vacías y eliminar "Level:"
+        const lines = rawLines
+          .map(l => l.trim())
+          .filter(l => l !== '' && !l.startsWith('Level:'));
 
-      // Extraer los EVs
-      const evsIndex = shinyIndex !== -1 ? shinyIndex + 2 : 4; // Ajustar índice si hay línea Shiny
-      const evs = lines[evsIndex].replace('EVs: ', '');
+        /* ===============================
+          NAME + ITEM
+        =============================== */
 
-      // Extraer la naturaleza
-      const natureIndex = shinyIndex !== -1 ? shinyIndex + 3 : 5; // Ajustar índice si hay línea Shiny
-      const nature = lines[natureIndex].replace(' Nature', '');
+        let nameSpecies: string;
+        let item: string | null = null;
 
-      // Extraer los IVs si están presentes
-      const ivsLineIndex = shinyIndex !== -1 ? shinyIndex + 4 : 6; // Ajustar índice si hay línea Shiny
-      const ivsLine = lines[ivsLineIndex] && lines[ivsLineIndex].startsWith('IVs: ') ? lines[ivsLineIndex].replace('IVs: ', '') : null;
+        if (lines[0].includes(' @ ')) {
+          [nameSpecies, item] = lines[0].split(' @ ');
+        } else {
+          nameSpecies = lines[0];
+        }
 
-      // Extraer los movimientos
-      const movesStartIndex = ivsLine ? (shinyIndex !== -1 ? shinyIndex + 5 : 7) : (shinyIndex !== -1 ? shinyIndex + 4 : 6);
-      const moves = lines.slice(movesStartIndex).map(line => line.replace('- ', '').trim());
+        // Eliminar género
+        let cleanedName = nameSpecies
+          .replace(/\(M\)/g, '')
+          .replace(/\(F\)/g, '')
+          .trim();
 
-      let pokeImg = '';
+        let nickname: string | null = null;
+        let species: string;
 
-      let imgName = species.trim().toLowerCase();
-      imgName = imgName.replace('(m)', '');
-      imgName = imgName.replace('(f)', '');
-      imgName = imgName.trim();
+        const nicknameMatch = cleanedName.match(/(.+?) \((.+)\)/);
 
-      // Comprobar si la imagen existe en las diferentes URLs
-      if (await this.imgValidatorService.checkImageExists('https://play.pokemonshowdown.com/sprites/gen5/' + imgName + '.png')) {
-        pokeImg = 'https://play.pokemonshowdown.com/sprites/gen5/' + imgName + '.png';
-      } else if (await this.imgValidatorService.checkImageExists('https://play.pokemonshowdown.com/sprites/dex/' + imgName.replace('-', '') + '.png')) {
-        pokeImg = 'https://play.pokemonshowdown.com/sprites/dex/' + imgName.replace('-', '') + '.png';
-      } else if( imgName == 'tauros-paldea-aqua' || imgName == 'tauros-paldea-blaze' || imgName == 'tauros-paldea-combat' || imgName == 'urshifu-rapid-strike' ) {
-        imgName = imgName.replace(/-(?=[^-]*$)/, '');
-        pokeImg = 'https://play.pokemonshowdown.com/sprites/gen5/' + imgName + '.png';
-      } else if (imgName.includes('iron')) {
-        imgName = imgName.replace(' ', '');
-        pokeImg = 'https://play.pokemonshowdown.com/sprites/gen5/' + imgName + '.png';
-      }else if (this.paradoxPastPokes.includes(imgName)) {
-        imgName = imgName.replace(' ', '');
-        pokeImg = 'https://play.pokemonshowdown.com/sprites/gen5/' + imgName + '.png';
-      }else if ( imgName.includes('necrozma-')){
-        imgName = imgName.replace(/-(?=[^-]*$)/, '');
-        pokeImg = 'https://play.pokemonshowdown.com/sprites/gen5/' + imgName + '.png';
-      }
-      
-      if(onlyImages){
+        if (nicknameMatch) {
+          nickname = nicknameMatch[1];
+          species = nicknameMatch[2];
+        } else {
+          species = cleanedName;
+        }
+
+        /* ===============================
+          ATRIBUTOS DINÁMICOS
+        =============================== */
+
+        const ability =
+          lines.find(l => l.startsWith('Ability:'))?.replace('Ability: ', '') || null;
+
+        const shinyLine = lines.find(l => l.startsWith('Shiny:'));
+        const shiny = shinyLine
+          ? shinyLine.replace('Shiny: ', '').toLowerCase() === 'yes'
+          : false;
+
+        const teraType =
+          lines.find(l => l.startsWith('Tera Type:'))?.replace('Tera Type: ', '') || null;
+
+        const evs =
+          lines.find(l => l.startsWith('EVs:'))?.replace('EVs: ', '') || null;
+
+        const nature =
+          lines.find(l => l.includes('Nature'))?.replace(' Nature', '') || null;
+
+        const ivsLine =
+          lines.find(l => l.startsWith('IVs:'))?.replace('IVs: ', '') || null;
+
+        const moves = lines
+          .filter(l => l.startsWith('- '))
+          .map(l => l.replace('- ', '').trim());
+
+        /* ===============================
+          IMAGEN
+        =============================== */
+
+        let pokeImg = '';
+
+        let imgName = species.trim().toLowerCase();
+        imgName = imgName.replace(/\(m\)|\(f\)/g, '').trim();
+
+        if (await this.imgValidatorService.checkImageExists(
+          `https://play.pokemonshowdown.com/sprites/gen5/${imgName}.png`
+        )) {
+          pokeImg = `https://play.pokemonshowdown.com/sprites/gen5/${imgName}.png`;
+
+        } else if (await this.imgValidatorService.checkImageExists(
+          `https://play.pokemonshowdown.com/sprites/dex/${imgName.replace('-', '')}.png`
+        )) {
+          pokeImg = `https://play.pokemonshowdown.com/sprites/dex/${imgName.replace('-', '')}.png`;
+
+        } else if (
+          imgName === 'tauros-paldea-aqua' ||
+          imgName === 'tauros-paldea-blaze' ||
+          imgName === 'tauros-paldea-combat' ||
+          imgName === 'urshifu-rapid-strike'
+        ) {
+          imgName = imgName.replace(/-(?=[^-]*$)/, '');
+          pokeImg = `https://play.pokemonshowdown.com/sprites/gen5/${imgName}.png`;
+
+        } else if (imgName.includes('iron')) {
+          imgName = imgName.replace(' ', '');
+          pokeImg = `https://play.pokemonshowdown.com/sprites/gen5/${imgName}.png`;
+
+        } else if (this.paradoxPastPokes.includes(imgName)) {
+          imgName = imgName.replace(' ', '');
+          pokeImg = `https://play.pokemonshowdown.com/sprites/gen5/${imgName}.png`;
+
+        } else if (imgName.includes('necrozma-')) {
+          imgName = imgName.replace(/-(?=[^-]*$)/, '');
+          pokeImg = `https://play.pokemonshowdown.com/sprites/gen5/${imgName}.png`;
+        }
+
+        /* ===============================
+          RETURN
+        =============================== */
+
+        if (onlyImages) {
+          return { pokeImg };
+        }
+
         return {
-            //species,
-            pokeImg,
+          nickname,
+          species,
+          pokeImg,
+          item,
+          ability,
+          shiny,
+          teraType,
+          evs,
+          nature,
+          ivs: ivsLine,
+          moves
         };
-      }else{
-        // Crear el objeto con la información extraída
-        return {
-            nickname,
-            species,
-            pokeImg,
-            item,
-            ability,
-            level,
-            shiny, // Agregar la propiedad shiny
-            teraType,
-            evs,
-            nature,
-            ivs: ivsLine,
-            moves
-        };
-      }
-    }));
-
-    let data = {};
+      })
+    );
 
     if (onlyImages) {
-      data = pokemonArray
-    }else{
-      data = {
-        'team_name': team.teamName,
-        'url_paste': team.urlPaste,
-        'url_json': team.urlPaste+'/json',
-        'pokemons': pokemonArray,
-        'desc_uso': team.descUso,
-        'tournament_using': team.tournamentUsing,
-        'mus_fav': team.musFav,
-        'counters': team.counters,
-        'damage_calcs': team.damageCalcs,
-        'is_public': team.isPublic,
-        'format_id': team.formatId,
-        'user_id': team.userId,
-        'subFormatId': team.subformat.id,
-        'subFormatName': team.subformat.subFormatName,
-        'subFormatDesc': team.subformat.abrevSubFormat
-      };
-
+      return pokemonArray;
     }
-    return data;
+
+    return {
+      team_name: team.teamName,
+      url_paste: team.urlPaste,
+      url_json: team.urlPaste + '/json',
+      pokemons: pokemonArray,
+      desc_uso: team.descUso,
+      tournament_using: team.tournamentUsing,
+      mus_fav: team.musFav,
+      counters: team.counters,
+      damage_calcs: team.damageCalcs,
+      is_public: team.isPublic,
+      format_id: team.formatId,
+      user_id: team.userId,
+      subFormatId: team.subformat.id,
+      subFormatName: team.subformat.subFormatName,
+      subFormatDesc: team.subformat.abrevSubFormat
+    };
   }
+
 
   async actualizarPokes(){
     console.log('actualizando pokes');
@@ -470,27 +512,28 @@ export class TeamsResolver {
 
       //return teams;
 
-      
       for await (const team of teams) {
         const teamJson = await this.getTeamJson(team.urlPaste.trim()+'/json');
 
         let data = await this.getDetailTeam(teamJson, team, true);
-        //console.log(data[0]);
+        //console.log('teamJson', teamJson);
         //console.log(team.id);
+        //console.log(data[0]);
         
+        const pokes = Array.from({ length: 6 }, (_, i) => data[i]?.pokeImg || null);
+
         let aux = {
-          'id': team.id,
-          'poke1': data[0].pokeImg,
-          'poke2': data[1].pokeImg,
-          'poke3': data[2].pokeImg,
-          'poke4': data[3].pokeImg,
-          'poke5': data[4].pokeImg,
-          'poke6': data[5].pokeImg,
-        }
+          id: team.id,
+          poke1: pokes[0],
+          poke2: pokes[1],
+          poke3: pokes[2],
+          poke4: pokes[3],
+          poke5: pokes[4],
+          poke6: pokes[5],
+        };
 
-        //console.log(aux);
+        await this.teamsService.updateTeamPokes(team.id, ...pokes);
 
-        await this.teamsService.updateTeamPokes(team.id, data[0].pokeImg, data[1].pokeImg, data[2].pokeImg, data[3].pokeImg, data[4].pokeImg, data[5].pokeImg);
 
         salida.push(aux);
       }

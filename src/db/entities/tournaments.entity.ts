@@ -11,8 +11,8 @@ export class Tournaments {
   @Column({name: 'nombre'})
   nombre: string;
 
-  @Column({ type: 'integer' })
-  tipo_torneo: number;
+  @Column()
+  tipo_torneo: string;
 
   @Column()
   fecha_torneo: Date;
@@ -21,8 +21,8 @@ export class Tournaments {
   @Column({name: 'user_id'})
   userId: number;
 
-  @Column({name: 'formato_torneo'})
-  formatoTorneo: number;
+  @Column()
+  formato_torneo: string;
 
   @OneToMany(
     () => TournamentTopPlayer,

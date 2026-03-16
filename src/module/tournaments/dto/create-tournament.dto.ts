@@ -4,8 +4,8 @@ export class CreateTournamentDto {
   @IsString()
   nombre: string;
 
-  @IsNumber()
-  tipo_torneo: number; 
+  @IsString()
+  tipo_torneo: string; 
 
   @IsTimeZone()
   fecha_torneo: Date; 

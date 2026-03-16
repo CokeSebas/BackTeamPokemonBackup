@@ -11,8 +11,8 @@ export class CreateTeamDto {
   @IsInt()
   formatId: number;
 
-  @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', name: 'date_created' })
-  dateCreated: Date;
+  @IsOptional()
+  dateCreated?: Date;
 
   @IsString()
   descUso?: string;

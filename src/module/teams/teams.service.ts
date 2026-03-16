@@ -29,13 +29,12 @@ export class TeamsService {
     if (!subformat) {
       throw new NotFoundException('Subformat not found');
     }
-
     const team = this.teamRepository.create({
       ...teamData,
       subformat,
     });
 
-    this.getallTeamsUpdate();
+    //this.getallTeamsUpdate();
 
     return this.teamRepository.save(team);
   }
@@ -123,21 +122,40 @@ export class TeamsService {
     //return this.teamRepository.find();
   }
 
-  async updateTeamPokes(teamId: number, poke1: string, poke2: string, poke3: string, poke4: string, poke5: string, poke6: string): Promise<void> {
-    this.logger.log('(S) Updating team pokes: '+teamId, TeamsService.name);
+  async updateTeamPokes(teamId: number, ...pokes: (string | null)[]): Promise<void> {
+    this.logger.log('(S) Updating team pokes: ' + teamId, TeamsService.name);
+
+    const padded = Array.from({ length: 6 }, (_, i) => pokes[i] ?? null);
+
     await this.teamRepository
       .createQueryBuilder()
       .update(Teams)
       .set({
-        poke1: poke1,
-        poke2: poke2,
-        poke3: poke3,
-        poke4: poke4,
-        poke5: poke5,
-        poke6: poke6,
+        poke1: padded[0],
+        poke2: padded[1],
+        poke3: padded[2],
+        poke4: padded[3],
+        poke5: padded[4],
+        poke6: padded[5],
       })
       .where('id = :id', { id: teamId })
       .execute();
   }
+
+
+
+  async findByUrlPaste(urlPaste: string) {
+    return this.teamRepository.findOne({ where: { urlPaste } });
+  }
+
+  async findAllUrlPastes(): Promise<string[]> {
+    const teams = await this.teamRepository.find({
+      select: ['urlPaste'],
+    });
+
+    return teams.map((t) => t.urlPaste);
+  }
+
+
 
 }
