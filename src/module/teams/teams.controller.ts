@@ -55,6 +55,13 @@ export class TeamsController {
     return res.status(salida[0].code).json(salida[0]);
   }
 
+  @Get('teamsheet-user/:id')
+  async getTeamSheetByUser(@Res() res: Response, @Param('id') id: string, @Headers('authorization') token: string) {
+    this.logger.log('(C) getTeamSheetByUserby team id: '+id, TeamsController.name);
+    const salida = await this.teamsResolver.getUserTeamSheet(+id, token);
+    return res.status(salida[0].code).json(salida[0]);
+  }
+
   @Get('/teams-user/:id')
   async getTeamsByUser(@Res() res: Response, @Param('id') id: string) {
     this.logger.log('(C) Getting teams by user: '+id, TeamsController.name);

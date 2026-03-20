@@ -7,7 +7,7 @@ import { HttpService } from "@nestjs/axios";
 import { ImageValidatorService } from "../common/img-validator/img-validator.service";
 import { JwtTokenService } from "../common/jwt-token/jwt-token.service";
 import { UpdateTeamDto } from "./dto/update-team.dto";
-import { on } from "events";
+import { UsersResolver } from "../users/users.resolver";
 
 @Injectable()
 export class TeamsResolver {
@@ -19,7 +19,8 @@ export class TeamsResolver {
     private readonly logger: MyLoggerService,
     private readonly httpService: HttpService,
     private readonly imgValidatorService: ImageValidatorService,
-    private readonly jwtTokenService: JwtTokenService
+    private readonly jwtTokenService: JwtTokenService,
+    private readonly usersResolver: UsersResolver
   ){}
 
   async create(createTeamDto: CreateTeamDto): Promise<Object> {
@@ -154,6 +155,7 @@ export class TeamsResolver {
   
       salida = [{
         data: data,
+        teamJson: teamJson.paste,
         message: 'Team obtained correctly',
         status: 'success',
         code: 200
@@ -186,6 +188,58 @@ export class TeamsResolver {
     
         salida = [{
           data: data,
+          teamJson: teamJson.paste,
+          message: 'Team obtained correctly',
+          status: 'success',
+          code: 200
+        }];
+      }else{
+        salida = [{
+          message: 'Team not found',
+          status: 'error',
+          code: 404
+        }];
+      }
+    }else{
+      salida = [{
+        data: null,
+        message: 'Usuario no es dueño del team',
+        status: 'error',
+        code: 201
+      }];
+    }
+
+    return salida;
+  }
+  async getUserTeamSheet(id: number, token: string){
+    this.logger.log('(R) Getting user team: '+id, TeamsResolver.name);
+
+    let salida = [], data = {}, dataUser = {};
+
+    let team = await this.teamsService.findOneJoin(id);
+
+    const tokerUser = token.split(' ')[1];    
+    const idUser = await this.jwtTokenService.decodeToken(tokerUser);
+
+    if(team.userId == idUser.userId){
+      if(team){
+        const teamJson = await this.getTeamJson(team.urlPaste.trim()+'/json');
+
+        data = await this.getDetailTeam(teamJson, team);
+
+        let user = await this.usersResolver.getUserById(idUser.userId);
+        const { name, lastName, nickName } = user[0].data;
+   
+        dataUser = {
+          'name': name + ' ' + lastName,
+          'nickName': nickName,
+          //popid
+        }
+
+        salida = [{
+          data: data,
+          dataUser: dataUser,
+          teamJson: teamJson.paste,
           message: 'Team obtained correctly',
           status: 'success',
           code: 200
