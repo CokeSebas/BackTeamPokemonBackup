@@ -508,6 +508,9 @@ export class TeamsResolver {
         } else if (imgName.includes('necrozma-')) {
           imgName = imgName.replace(/-(?=[^-]*$)/, '');
           pokeImg = `https://play.pokemonshowdown.com/sprites/gen5/${imgName}.png`;
+        } else if (imgName.includes('-mega-')) {
+          imgName = imgName.replace('-mega-', '-mega');
+          pokeImg = `https://play.pokemonshowdown.com/sprites/gen5/${imgName}.png`;
         }
 
         /* ===============================

@@ -52,6 +52,16 @@ export class PokemonService {
       .getMany();                               // Devuelve los resultados
   }
 
+  async findAllPokesHomeJoin(){
+    this.logger.log('(S) Fetching all pokemons: ', PokemonService.name);
+    return this.pokemonRepository
+      .createQueryBuilder('p')
+      .innerJoinAndSelect('p.subFormat', 's')
+      .where('p.isPublic = :isPublic', { isPublic: true })
+      .orderBy('p.id', 'DESC')
+      .getMany();
+  }
+
   async findAllPokesHome(){
     this.logger.log('(S) Fetching all pokemons: ', PokemonService.name);
     return this.pokemonRepository.find({where: { isPublic: true }, order: {id: 'desc'}});

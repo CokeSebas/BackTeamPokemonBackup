@@ -123,7 +123,7 @@ export class PokemonResolver {
 
   async getPokesHome(){
     this.logger.log('(R) Getting all pokemons: ', PokemonResolver.name);
-    let pokemons = await this.pokemonService.findAllPokesHome();
+    let pokemons = await this.pokemonService.findAllPokesHomeJoin();
     let salida = [], data = [];
 
     let idx = 0;
@@ -137,6 +137,7 @@ export class PokemonResolver {
           'teraType': element.teraType,
           'id': element.id,
           'imgPokemon': element.urlImage,
+          'subFormatId': element.subFormat.id
         };
   
         data.push(aux);
@@ -580,6 +581,9 @@ export class PokemonResolver {
     }else if ( imgName.includes('necrozma-')){
       imgName = imgName.replace(/-(?=[^-]*$)/, '');
       pokeImg = 'https://play.pokemonshowdown.com/sprites/gen5/' + imgName + '.png';
+    }else if (imgName.includes('-mega-')) {
+      imgName = imgName.replace('-mega-', '-mega');
+      pokeImg = `https://play.pokemonshowdown.com/sprites/gen5/${imgName}.png`;
     }
 
     const pokemonSave = {
