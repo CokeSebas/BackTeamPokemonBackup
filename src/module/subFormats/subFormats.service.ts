@@ -3,6 +3,7 @@ import { Repository } from 'typeorm';
 import { MyLoggerService } from '../common/logger/myLogger.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SubFormat } from '../../db/entities/subFormat.entity';
+import { MoreThanOrEqual } from 'typeorm';
 
 @Injectable()
 export class SubFormatsService {
@@ -16,7 +17,15 @@ export class SubFormatsService {
 
   async findAll() {
     this.logger.log('(S) Fetching all subformats: ', SubFormatsService.name);
-    return this.subFormatRepository.find({order: {id: 'desc'}});
+
+    return this.subFormatRepository.find({
+      where: {
+        id: MoreThanOrEqual(7),
+      },
+      order: {
+        id: 'desc',
+      },
+    });
   }
 
   async findOne(id: number) {

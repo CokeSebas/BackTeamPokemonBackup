@@ -116,7 +116,7 @@ export class TournamentTopPlayerService {
   async findByTournament(
     tournamentId: number,
   ): Promise<TournamentTopPlayer[]> {
-    console.log('(S)Obteniendo tops para el torneo ID:', tournamentId);
+    //console.log('(S)Obteniendo tops para el torneo ID:', tournamentId);
 
     return this.topPlayerRepo.find({
       where: { tournamentId },

@@ -6,6 +6,8 @@ import { Teams } from '../../db/entities/team.entity';
 import { Repository } from 'typeorm';
 import { MyLoggerService } from '../common/logger/myLogger.service';
 import { SubFormat } from '../../db/entities/subFormat.entity';
+import axios from 'axios';
+import * as qs from 'qs';
 
 @Injectable()
 export class TeamsService {
@@ -22,6 +24,32 @@ export class TeamsService {
   async create(createTeamDto: CreateTeamDto) {
     this.logger.log('(S) Creating team: ', TeamsService.name);
     
+    let location = null;
+    if(createTeamDto.urlPaste == '' || createTeamDto.urlPaste == null){
+      
+      //console.log(createTeamDto.rawInput);
+
+      const response = await axios.post(
+        'https://pokepast.es/create',
+        qs.stringify({
+          paste: createTeamDto.rawInput,
+          title: createTeamDto.teamName,
+        }),
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          maxRedirects: 0, // 🔥 clave
+          validateStatus: status => status === 302 || status === 303,
+        }
+      );
+
+      location = response.headers.location;
+
+    }
+
+    createTeamDto.urlPaste = location ? `https://pokepast.es${location}` : createTeamDto.urlPaste;
+
     const { subFormatId, ...teamData } = createTeamDto;
 
     // Busca el subformato y asegúrate de que existe
@@ -50,6 +78,7 @@ export class TeamsService {
       .createQueryBuilder('t')                  // Alias 't' para la tabla teams
       .innerJoinAndSelect('t.subformat', 's')   // INNER JOIN con la tabla subformats
       .where('t.is_public = :isPublic', { isPublic: true }) // Filtro para is_public = true
+      .andWhere('t.sub_format_id > 6') // Filtro traer las últmas regulaciones
       .orderBy('t.id', 'DESC')
       .getMany();                               // Devuelve los resultados
   }
@@ -66,6 +95,7 @@ export class TeamsService {
       .innerJoinAndSelect('t.subformat', 's')   // INNER JOIN con la tabla subformats
       .where('t.is_public = :isPublic', { isPublic: true }) // Filtro para is_public = true
       .orderBy('t.id', 'DESC')
+      .limit(20) // Limitar a los 20 equipos más recientes
       .getMany();                               // Devuelve los resultados
   }
 

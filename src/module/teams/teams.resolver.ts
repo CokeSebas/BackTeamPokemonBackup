@@ -29,8 +29,6 @@ export class TeamsResolver {
 
     const team = await this.teamsService.create(createTeamDto);
 
-    //console.log(team);
-
     if(team){
       
       await this.actualizarPokes();
@@ -100,10 +98,12 @@ export class TeamsResolver {
     this.logger.log('(R) Getting all teams home: ', TeamsResolver.name);
     let teams = await this.teamsService.findAllHomeJoin();
 
+    console.log(teams.length);
+
     let salida = [], datos = [];
 
     teams.forEach((element, idx) => {
-      if(idx <= 5){
+      if(idx <= 11){
         let aux = {
           'id': element.id,
           'team_name': element.teamName,
@@ -396,9 +396,9 @@ export class TeamsResolver {
 
     // Separar por Pokémon cuando detecta "Nombre @ Item"
     const pokemonBlocks = rawText
-      .split(/\n(?=[^\n]+ @ )/)
-      .map(b => b.trim())
-      .filter(b => b.length > 0);
+      .split(/\n\s*\n/)
+      .map(block => block.trim())
+      .filter(block => block.length > 0);
 
     const pokemonArray = await Promise.all(
       pokemonBlocks.map(async (block) => {
@@ -417,10 +417,10 @@ export class TeamsResolver {
         let nameSpecies: string;
         let item: string | null = null;
 
-        if (lines[0].includes(' @ ')) {
+        if (lines.length > 0 && lines[0].includes(' @ ')) {
           [nameSpecies, item] = lines[0].split(' @ ');
         } else {
-          nameSpecies = lines[0];
+          nameSpecies = lines[0] || '';
         }
 
         // Eliminar género
@@ -556,7 +556,8 @@ export class TeamsResolver {
       user_id: team.userId,
       subFormatId: team.subformat.id,
       subFormatName: team.subformat.subFormatName,
-      subFormatDesc: team.subformat.abrevSubFormat
+      subFormatDesc: team.subformat.abrevSubFormat,
+      codeRental: team.codeRental
     };
   }
 

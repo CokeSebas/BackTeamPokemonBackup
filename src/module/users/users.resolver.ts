@@ -126,6 +126,7 @@ export class UsersResolver {
         'avatarUrl': element.avatarUrl,
         'nickName': element.nickName,
         "isOrganizer": element.isOrganizer,
+        "isActive": element.isActive,
       }
 
       datos.push(aux);

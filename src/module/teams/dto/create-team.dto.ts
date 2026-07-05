@@ -49,4 +49,13 @@ export class CreateTeamDto {
   poke5?: string;
   @IsString()
   poke6?: string;
+
+  @IsString()
+  codeRental?: string;
+
+  @IsString()
+  rawInput?: string;
+
+  @IsString()
+  showdownText?: string;
 }

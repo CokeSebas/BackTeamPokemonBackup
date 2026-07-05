@@ -18,6 +18,7 @@ import { PokModule } from './module/pokemon-seeder/pok.module';
 import { TournamentTopPlayerModule } from './module/tournament-top-player/tournament-top-player.module';
 import { SheetModule } from './module/sheet/sheet.module';
 import { PastePokesModule } from './module/paste-pokes/paste-pokes.module';
+import { MatchesModule } from './module/matches/matches.module';
 
 
 @Module({
@@ -54,7 +55,8 @@ import { PastePokesModule } from './module/paste-pokes/paste-pokes.module';
     PokModule,
     TournamentTopPlayerModule,
     SheetModule,
-    PastePokesModule
+    PastePokesModule,
+    MatchesModule,
   ],
   controllers: [
     AppController

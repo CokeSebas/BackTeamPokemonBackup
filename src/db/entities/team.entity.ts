@@ -62,4 +62,7 @@ export class Teams {
   @Column({name: 'poke6'})
   poke6: string;
 
+  @Column({name: 'code_rental'})
+  codeRental: string;
+
 }

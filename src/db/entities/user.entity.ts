@@ -4,7 +4,9 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
+import { Match } from './match.entity';
 
 @Entity('users')
 export class User {
@@ -53,4 +55,7 @@ export class User {
   
   @Column({ type: 'boolean', default: true, name: 'is_admin' })
   isAdmin: boolean;
+
+  @OneToMany(() => Match, (match) => match.user)
+  matches: Match[];
 }
