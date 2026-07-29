@@ -311,7 +311,7 @@ export class UsersResolver {
     if(!user.isActive){
       this.logger.error('Usuario no activado', UsersResolver.name);
       salida = [{
-        message: 'Usuario no activado',
+        message: 'Usuario no activado, recuerda revisar tu mail para activar tu cuenta',
         status: 'error',
         code: 404
       }];

@@ -1,10 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Res, Headers } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Res, Headers, UploadedFiles, UseInterceptors } from '@nestjs/common';
 import { Response } from 'express';
 import { TeamsService } from './teams.service';
 import { CreateTeamDto } from './dto/create-team.dto';
 import { UpdateTeamDto } from './dto/update-team.dto';
 import { TeamsResolver } from './teams.resolver';
 import { MyLoggerService } from '../common/logger/myLogger.service';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 
 @Controller('teams')
 export class TeamsController {
@@ -80,11 +82,43 @@ export class TeamsController {
     return this.teamsService.remove(+id);
   }
 
-
   @Get('/teams/actualizarPokes/')
   async getActualizarPokes(@Res() res: Response) {
     this.logger.log('(C) Actualizando pokes', TeamsController.name);
     const salida = await this.teamsResolver.actualizarPokes();
     return res.status(200).json(salida);
+  }
+
+  @Post('read-images')
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'infoImage', maxCount: 1 },
+        { name: 'statsImage', maxCount: 1 },
+      ],
+      {
+        storage: memoryStorage(),
+        limits: {
+          fileSize: 10 * 1024 * 1024,
+        },
+      },
+    ),
+  )
+  async readImages(
+    @UploadedFiles() files: any,
+  ): Promise<any> {
+
+    if (!files?.infoImage?.length || !files?.statsImage?.length) {
+      return {
+        status: 'error',
+        code: 'IMAGES_REQUIRED',
+        message: 'Las dos imágenes son obligatorias.',
+      };
+    }
+
+    return this.teamsService.readImages(
+      files.infoImage[0],
+      files.statsImage[0],
+    );
   }
 }

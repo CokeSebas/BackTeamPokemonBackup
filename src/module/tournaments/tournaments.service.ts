@@ -26,7 +26,11 @@ export class TournamentsService {
 
   async findAll() {
     this.logger.log('(S) Find all tournaments', TournamentsService.name);
-    return this.tournamentRepository.find();
+    return this.tournamentRepository.find({
+    order: {
+      id: 'DESC',
+    },
+  });
   }
 
 

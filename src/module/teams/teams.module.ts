@@ -13,6 +13,8 @@ import { JwtTokenService } from '../common/jwt-token/jwt-token.service';
 import { JwtModule } from '@nestjs/jwt';
 import { SubFormatsModule } from '../subFormats/subFormats.module';
 import { UsersModule } from '../users/users.module';
+import { VisionModule } from '../vision/vision.module';
+import { ParserModule } from '../parser/parser.module';
 
 @Module({
   imports: [
@@ -25,6 +27,8 @@ import { UsersModule } from '../users/users.module';
     CommonModule,
     SubFormatsModule,
     UsersModule,
+    VisionModule,
+    ParserModule,
   ],
   controllers: [TeamsController],
   providers: [TeamsService, TeamsResolver, MyLoggerService, ImageValidatorService, JwtTokenService],
