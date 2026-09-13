@@ -19,6 +19,7 @@ import { TournamentTopPlayerModule } from './module/tournament-top-player/tourna
 import { SheetModule } from './module/sheet/sheet.module';
 import { PastePokesModule } from './module/paste-pokes/paste-pokes.module';
 import { MatchesModule } from './module/matches/matches.module';
+import { NotificationModule } from './module/notification/notification.module';
 
 
 @Module({
@@ -57,6 +58,7 @@ import { MatchesModule } from './module/matches/matches.module';
     SheetModule,
     PastePokesModule,
     MatchesModule,
+    NotificationModule,
   ],
   controllers: [
     AppController

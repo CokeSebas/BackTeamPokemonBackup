@@ -12,6 +12,8 @@ import { CreateTournamentTopPlayerDto } from './dto/create-tournament-top-player
 import { Tournaments } from '../../db/entities/tournaments.entity';
 import { Pokemon } from '../../db/entities/list-pokemons.entity';
 import { CreateTournamentTopDto } from './dto/create-tournament-top.dto';
+import { NotificationService } from '../notification/notification.service';
+import { TournamentsService } from '../tournaments/tournaments.service';
 
 @Injectable()
 export class TournamentTopPlayerService {
@@ -27,6 +29,8 @@ export class TournamentTopPlayerService {
 
     @InjectRepository(Pokemon)
     private readonly pokemonRepo: Repository<Pokemon>,
+    private notificationService: NotificationService,
+    private readonly tournamentsService: TournamentsService,
   ) {}
 
   // ===============================
@@ -188,6 +192,19 @@ export class TournamentTopPlayerService {
 
       position++;
     }
+
+    const nameTournament = await this.tournamentsService.findTournamentNameById(tournamentId);
+
+    const today = new Date();
+    const publishDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+    await this.notificationService.createNotification({
+      textId: `${Date.now()}-top-${tournamentId}`,
+      title: 'Top del torneo disponible',
+      message: `Se publicó el Top del torneo ${nameTournament}.`,
+      link: `/tournament/goToTops/${tournamentId}`,
+      publishDate: publishDate as any,
+    });
 
     return { message: 'Top registrado correctamente' };
   }

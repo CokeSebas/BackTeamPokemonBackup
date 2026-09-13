@@ -3,6 +3,7 @@ import axios from 'axios';
 import { parse } from 'csv-parse/sync';
 import { TeamsService } from '../teams/teams.service';
 import { TeamsResolver } from '../teams/teams.resolver';
+import { NotificationService } from '../notification/notification.service';
 
 
 @Injectable()
@@ -10,6 +11,7 @@ export class SheetService {
   constructor(
     private readonly teamsService: TeamsService,
     private readonly teamsResolver: TeamsResolver,
+    private notificationService: NotificationService
   ) {}
   
 
@@ -91,21 +93,35 @@ export class SheetService {
     );
 
     
-   await Promise.all(
-    notInDb.map((team) =>
-      this.teamsService.create({
-        teamName: team.teamDescription,
-        urlPaste: team.pokepaste,
-        formatId: 1,
-        userId: 2,
-        subFormatId: subFormatId,
-        isPublic: true,
-        descUso: team.linkToSource ?? '',
-        tournamentUsing: team.tournamentEvent ?? '',
-        codeRental: team.codeRental ?? null, // 👈 aquí
-      }),
-    ),
-  );
+    await Promise.all(
+      notInDb.map((team) =>
+        this.teamsService.create({
+          teamName: team.teamDescription,
+          urlPaste: team.pokepaste,
+          formatId: 1,
+          userId: 2,
+          subFormatId: subFormatId,
+          isPublic: true,
+          descUso: team.linkToSource ?? '',
+          tournamentUsing: team.tournamentEvent ?? '',
+          codeRental: team.codeRental ?? null, // 👈 aquí
+        }),
+      ),
+    );
+
+    if (notInDb.length > 0) {
+      const today = new Date();
+
+      const date = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+      await this.notificationService.createNotification({
+        textId: `${Date.now()}-sync-teams`,
+        title: 'Nuevos equipos disponibles',
+        message: `Se agregaron ${notInDb.length} nuevos equipos a la pagina.`,
+        link: '/vgc/teams',
+        publishDate: date as any,
+      });
+    }
 
     await this.teamsResolver.actualizarPokes();
 

@@ -14,6 +14,6 @@ import { TournamentResolver } from './tournament.resolver';
   ],
   controllers: [TournamentsController],
   providers: [TournamentsService, MyLoggerService, TournamentResolver],
-  exports: [TournamentResolver],
+  exports: [TournamentResolver, TournamentsService],
 })
 export class TournamentsModule {}

@@ -10,6 +10,9 @@ import { TournamentTopPlayerController } from './tournament-top-player.controlle
 import { Tournaments } from '../../db/entities/tournaments.entity';
 import { Pokemon } from '../../db/entities/list-pokemons.entity';
 
+import { NotificationModule } from '../notification/notification.module';
+import { TournamentsModule } from '../tournaments/tournaments.module';
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -18,6 +21,8 @@ import { Pokemon } from '../../db/entities/list-pokemons.entity';
       Tournaments,
       Pokemon,
     ]),
+    NotificationModule,
+    TournamentsModule,
   ],
   controllers: [TournamentTopPlayerController],
   providers: [TournamentTopPlayerService],

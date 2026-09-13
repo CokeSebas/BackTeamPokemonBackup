@@ -26,11 +26,42 @@ export class TournamentsService {
 
   async findAll() {
     this.logger.log('(S) Find all tournaments', TournamentsService.name);
-    return this.tournamentRepository.find({
-    order: {
-      id: 'DESC',
-    },
-  });
+
+    const query = this.tournamentRepository
+      .createQueryBuilder('tournament')
+      .addSelect(`
+        EXISTS (
+          SELECT 1
+          FROM tournament_round tr
+          WHERE tr.tournament_id = tournament.id
+        )
+      `, 'has_round')
+      .addSelect(`
+        EXISTS (
+          SELECT 1
+          FROM tournament_standing ts
+          WHERE ts.tournament_id = tournament.id
+        )
+      `, 'has_standing')
+      .addSelect(`
+        EXISTS (
+          SELECT 1
+          FROM tournament_round_result trr
+          INNER JOIN tournament_round tr
+            ON tr.id = trr.round_id
+          WHERE tr.tournament_id = tournament.id
+        )
+      `, 'has_results')
+      .orderBy('tournament.id', 'DESC');
+
+    const { entities, raw } = await query.getRawAndEntities();
+
+    return entities.map((tournament, index) => ({
+      ...tournament,
+      hasRound: raw[index].has_round === true || raw[index].has_round === 'true',
+      hasStanding: raw[index].has_standing === true || raw[index].has_standing === 'true',
+      hasResults: raw[index].has_results === true || raw[index].has_results === 'true',
+    }));
   }
 
 
@@ -44,6 +75,20 @@ export class TournamentsService {
       .where('t.id = :tournamentId', { tournamentId })
       .orderBy('ts.position', 'ASC')
       .getOne();
+  }
+
+  async findTournamentNameById(id: number): Promise<string | null> {
+    this.logger.log(
+      `(S) Find tournament name by id: ${id}`,
+      TournamentsService.name,
+    );
+
+    const tournament = await this.tournamentRepository.findOne({
+      where: { id },
+      select: ['nombre'],
+    });
+
+    return tournament ? tournament.nombre : null;
   }
 
 }
