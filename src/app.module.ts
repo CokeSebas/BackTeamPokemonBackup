@@ -20,6 +20,7 @@ import { SheetModule } from './module/sheet/sheet.module';
 import { PastePokesModule } from './module/paste-pokes/paste-pokes.module';
 import { MatchesModule } from './module/matches/matches.module';
 import { NotificationModule } from './module/notification/notification.module';
+import { AppEventModule } from './module/app-event/app-event.module';
 
 
 @Module({
@@ -59,6 +60,7 @@ import { NotificationModule } from './module/notification/notification.module';
     PastePokesModule,
     MatchesModule,
     NotificationModule,
+    AppEventModule,
   ],
   controllers: [
     AppController

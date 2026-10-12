@@ -392,6 +392,8 @@ export class TeamsService {
       );
     }
 
+    //aca registrar en BBDD el user que subio el team
+
     return {
       status: 'success',
       pokemon,

@@ -29,7 +29,7 @@ export class UsersService {
   }
 
   async findOneByEmail(email: string) {
-    this.logger.log('(S) Getting user by email: ', UsersService.name);
+    this.logger.log('(S) Getting user by email: '+email, UsersService.name);
     return this.userRepository.findOne({ where: { email } });
   }
   

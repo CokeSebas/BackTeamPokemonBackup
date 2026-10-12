@@ -2,7 +2,7 @@ import { MyLoggerService } from "../common/logger/myLogger.service";
 import { PasswordEncriptService } from "../common/password-encript/password-encript.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UsersService } from "./users.service";
-import { Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { JwtTokenService } from "../common/jwt-token/jwt-token.service";
 import { ChangePasswordDto } from "./dto/change-password.dto";
@@ -75,7 +75,26 @@ export class UsersResolver {
   async verifyEmail(token: string): Promise<Object> {
     this.logger.log('(R) Verify email: ', UsersResolver.name);
 
-    let tokenData = await this.jwtTokenService.validateToken(token);
+    let tokenData;
+
+    try {
+      tokenData = await this.jwtTokenService.validateToken(token);
+    } catch (error) {
+      if (
+        error?.name === 'TokenExpiredError' ||
+        error?.cause?.name === 'TokenExpiredError'
+      ) {
+        throw new UnauthorizedException({
+          message: 'El enlace de verificación ha expirado.',
+          code: 'VERIFICATION_TOKEN_EXPIRED'
+        });
+      }
+
+      throw new UnauthorizedException({
+        message: 'El enlace de verificación no es válido.',
+        code: 'VERIFICATION_TOKEN_INVALID'
+      });
+    }
 
     const email = tokenData.email;
 
@@ -107,6 +126,57 @@ export class UsersResolver {
       status: 'success',
       code: 200,
     }];
+
+    return salida;
+  }
+
+  async resendVerificationEmail(email: string): Promise<Object> {
+
+    this.logger.log(
+      '(R) Resending verification email: ' + email,
+      UsersResolver.name
+    );
+
+    const normalizedEmail = String(email || '')
+      .trim()
+      .toLowerCase();
+
+    if (
+      !normalizedEmail ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)
+    ) {
+      throw new BadRequestException(
+        'Debes ingresar un correo electrónico válido'
+      );
+    }
+
+    // Buscar usuario
+    const user = await this.usersService.findOneByEmail(
+      normalizedEmail
+    );
+
+    // Respuesta genérica para evitar revelar cuentas existentes
+    const salida = [{
+      message: 'Si tu cuenta está pendiente de verificación, recibirás un nuevo enlace en tu correo. Revisa también la carpeta de spam.',
+      status: 'success',
+      code: 200
+    }];
+
+    if (!user || user.isActive) {
+      return salida;
+    }
+
+    // Generar nuevo token de 24 horas
+    const tokenMail = await this.jwtTokenService.createToken(
+      'email',
+      user.email
+    );
+
+    // Reenviar correo
+    await this.mailService.sendVerificationEmail(
+      user.email,
+      tokenMail
+    );
 
     return salida;
   }
@@ -292,70 +362,89 @@ export class UsersResolver {
 
     let salida = [], data = {};
 
-    const email = loginUserDto.email;
-
-    const user = await this.usersService.findOneByEmail(email);
-
-    if(!user) {
-      this.logger.error('El usuario no existe', UsersResolver.name);
-      
-      salida = [{
-        message: 'El usuario no existe',
-        status: 'error',
-        code: 404
-      }];
-
-      return salida;
-    }
-
-    if(!user.isActive){
-      this.logger.error('Usuario no activado', UsersResolver.name);
-      salida = [{
-        message: 'Usuario no activado, recuerda revisar tu mail para activar tu cuenta',
-        status: 'error',
-        code: 404
-      }];
-
-      return salida;
-    }
+    const email = String(loginUserDto.email || '').trim().toLowerCase();
 
     const password = loginUserDto.passwordHash;
 
-    const isPasswordValid = await this.passwordEncriptService.comparePassword(password, user.passwordHash);
+    // 1. Buscar usuario
+    const user = await this.usersService.findOneByEmail(email);
 
-    if (!isPasswordValid) {
-      this.logger.error('La contraseña es incorrecta', UsersResolver.name);
+    if (!user) {
+      this.logger.error(
+        'Credenciales incorrectas',
+        UsersResolver.name
+      );
 
-      salida = [{
-        data: data,
+      return [{
         message: 'Usuario o contraseña incorrecta',
         status: 'error',
-        code: 202
+        code: 401,
+        errorCode: 'INVALID_CREDENTIALS'
       }];
-      return salida;
     }
 
-    ///agregar si el usuario es admin o no
-    const token = await this.jwtTokenService.createToken('userId',user.id);
+    // 2. Validar contraseña ANTES de comprobar activación
+    const isPasswordValid =
+      await this.passwordEncriptService.comparePassword(
+        password,
+        user.passwordHash
+      );
 
+    if (!isPasswordValid) {
+      this.logger.error(
+        'Contraseña incorrecta',
+        UsersResolver.name
+      );
+
+      return [{
+        message: 'Usuario o contraseña incorrecta',
+        status: 'error',
+        code: 401,
+        errorCode: 'INVALID_CREDENTIALS'
+      }];
+    }
+
+    // 3. Verificar si la cuenta está activa
+    if (!user.isActive) {
+      this.logger.warn(
+        'Usuario pendiente de verificación',
+        UsersResolver.name
+      );
+
+      return [{
+        message: 'Tu cuenta todavía no está activa. Debes verificar tu correo electrónico antes de ingresar.',
+        status: 'error',
+        code: 403,
+        errorCode: 'EMAIL_NOT_VERIFIED',
+        canResendVerification: true
+      }];
+    }
+
+    // 4. Generar token de autenticación
+    const token = await this.jwtTokenService.createToken(
+      'userId',
+      user.id
+    );
+
+    // 5. Construir datos del usuario
     data = {
-      'name': user.name,
-      'lastName': user.lastName,
-      'email': user.email,
-      'avatarUrl': user.avatarUrl,
-      'token': token,
-      'nickName': user.nickName,
-      'id': user.id
+      name: user.name,
+      lastName: user.lastName,
+      email: user.email,
+      avatarUrl: user.avatarUrl,
+      token: token,
+      nickName: user.nickName,
+      id: user.id
     };
 
-    salida = [{ 
+    salida = [{
       data: data,
       message: 'Usuario autenticado correctamente',
       status: 'success',
-      code: 200 
+      code: 200
     }];
 
-    return salida;    
+    return salida;
   }
 
   async forgotPassword(email : string): Promise<Object> {

@@ -72,14 +72,19 @@ export class UsersController {
   }
 
   @Post('/login')
-  async login(@Body() loginUserDto: CreateUserDto, @Res() res: Response): Promise<Object> {
-    this.logger.log('(C) Login user', UsersController.name);
+  async login(
+    @Body() loginUserDto: CreateUserDto,
+    @Res() res: Response
+  ): Promise<Object> {
+
+    this.logger.log(
+      '(C) Login user',
+      UsersController.name
+    );
+
     const salida = await this.usersResolver.loginUser(loginUserDto);
-    if(salida[0].status == 'success'){
-      return res.status(salida[0].code).json(salida[0]);
-    }else{
-      return res.status(salida[0].code).json(salida[0]);
-    }
+
+    return res.status(salida[0].code).json(salida[0]);
   }
 
   @Post('/forgot-password')
@@ -102,5 +107,20 @@ export class UsersController {
     }else{
       return res.status(salida[0].code).json(salida[0]);
     }
+  }
+
+  @Post('/resend-verification-email')
+  async resendVerificationEmail(
+    @Body('email') email: string,
+    @Res() res
+  ) {
+    this.logger.log(
+      '(C) Resending verification email',
+      UsersController.name
+    );
+
+    const salida = await this.usersResolver.resendVerificationEmail(email);
+
+    return res.status(salida[0].code).json({ salida });
   }
 }
