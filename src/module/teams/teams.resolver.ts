@@ -141,18 +141,22 @@ export class TeamsResolver {
     return salida;
   }
 
-  async getTeamById(id: number){
-    this.logger.log('(R) Getting team by id: '+id, TeamsResolver.name);
-    //let team = await this.teamsService.findOne(id);
-    let team = await this.teamsService.findOneJoin(id);
-  
+
+  async getTeamById(id: number) {
+    this.logger.log( '(R) Getting team by id: ' + id, TeamsResolver.name );
+
+    // Solo equipos públicos
+    const team = await this.teamsService.findOneJoin(id, true);
+
     let salida = [], data = {};
-  
-    if(team){
-      const teamJson = await this.getTeamJson(team.urlPaste.trim()+'/json');
+
+    if (team) {
+      const teamJson = await this.getTeamJson(
+        team.urlPaste.trim() + '/json'
+      );
 
       data = await this.getDetailTeam(teamJson, team);
-  
+
       salida = [{
         data: data,
         teamJson: teamJson.paste,
@@ -160,57 +164,77 @@ export class TeamsResolver {
         status: 'success',
         code: 200
       }];
-    }else{
+    } else {
       salida = [{
+        message: 'Equipo no es publico o no existe',
+        status: 'error',
+        code: 404
+      }];
+    }
+
+    return salida;
+  }
+
+
+  async getUserTeam(id: number, token: string) {
+    this.logger.log(
+      '(R) Getting user team: ' + id,
+      TeamsResolver.name
+    );
+
+    let salida = [], data = {};
+
+    // Buscar equipo, sea público o privado
+    const team = await this.teamsService.findOneJoin(id);
+
+    // Validar que exista
+    if (!team) {
+      return [{
         message: 'Team not found',
         status: 'error',
         code: 404
       }];
     }
-    return salida;
-  }
 
-  async getUserTeam(id: number, token: string){
-    this.logger.log('(R) Getting user team: '+id, TeamsResolver.name);
-
-    let salida = [], data = {};
-
-    let team = await this.teamsService.findOneJoin(id);
-
-    const tokerUser = token.split(' ')[1];    
-    const idUser = await this.jwtTokenService.decodeToken(tokerUser);
-
-    if(team.userId == idUser.userId){
-      if(team){
-        const teamJson = await this.getTeamJson(team.urlPaste.trim()+'/json');
-
-        data = await this.getDetailTeam(teamJson, team);
-    
-        salida = [{
-          data: data,
-          teamJson: teamJson.paste,
-          message: 'Team obtained correctly',
-          status: 'success',
-          code: 200
-        }];
-      }else{
-        salida = [{
-          message: 'Team not found',
-          status: 'error',
-          code: 404
-        }];
-      }
-    }else{
-      salida = [{
-        data: null,
-        message: 'Usuario no es dueño del team',
+    // Validar que exista el token Bearer
+    if (!token || !/^Bearer \S+$/i.test(token)) {
+      return [{
+        message: 'Token de autenticación requerido',
         status: 'error',
-        code: 201
+        code: 401
       }];
     }
 
+    const tokenUser = token.split(' ')[1];
+    const idUser = await this.jwtTokenService.decodeToken(tokenUser);
+
+    // Verificar que el usuario sea el propietario
+    if (!idUser || Number(team.userId) !== Number(idUser.userId)) {
+      return [{
+        data: null,
+        message: 'Usuario no es dueño del team',
+        status: 'error',
+        code: 403
+      }];
+    }
+
+    const teamJson = await this.getTeamJson(
+      team.urlPaste.trim() + '/json'
+    );
+
+    data = await this.getDetailTeam(teamJson, team);
+
+    salida = [{
+      data: data,
+      teamJson: teamJson.paste,
+      message: 'Team obtained correctly',
+      status: 'success',
+      code: 200
+    }];
+
     return salida;
   }
+
   async getUserTeamSheet(id: number, token: string){
     this.logger.log('(R) Getting user team: '+id, TeamsResolver.name);
 

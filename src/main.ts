@@ -15,7 +15,18 @@ async function bootstrap() {
   });
 
   // Habilitar CORS con configuración predeterminada
-  app.enableCors();
+  app.enableCors({
+    origin: [
+      'http://localhost:3000',
+      'https://pokecircuit.com',
+    ],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'x-api-key',
+    ],
+  });
 
   // Configurar prefijo global para todas las rutas (opcional)
   app.setGlobalPrefix('api');

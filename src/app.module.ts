@@ -22,6 +22,9 @@ import { MatchesModule } from './module/matches/matches.module';
 import { NotificationModule } from './module/notification/notification.module';
 import { AppEventModule } from './module/app-event/app-event.module';
 
+import { APP_GUARD } from '@nestjs/core';
+import { ApiKeyGuard } from './auth/api-key.guard';
+
 
 @Module({
   imports: [
@@ -66,7 +69,11 @@ import { AppEventModule } from './module/app-event/app-event.module';
     AppController
   ],
   providers: [
-    AppService
+  AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ApiKeyGuard,
+    },
   ],
 })
 export class AppModule {}

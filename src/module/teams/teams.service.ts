@@ -142,14 +142,29 @@ export class TeamsService {
     return this.teamRepository.findOne({ where: { id } });
   }
 
-  async findOneJoin(id: number) {
-    this.logger.log('(S) Getting team by id: '+id, TeamsService.name);
-    return this.teamRepository
-      .createQueryBuilder('t')                  // Alias 't' para la tabla teams
-      .innerJoinAndSelect('t.subformat', 's')   // INNER JOIN con la tabla subformats
-      .where('t.id = :id', { id }) // Filtro para is_public = true
-      .getOne();                               // Devuelve los resultados
+
+async findOneJoin(id: number, onlyPublic: boolean = false) {
+  this.logger.log(
+    '(S) Getting team join by id: ' + id,
+    TeamsService.name
+  );
+
+  const query = this.teamRepository
+    .createQueryBuilder('t')
+    .innerJoinAndSelect('t.subformat', 's')
+    .where('t.id = :id', { id });
+
+  // Si se requiere un equipo público,
+  // filtrar por is_public = true
+  if (onlyPublic) {
+    query.andWhere('t.is_public = :isPublic', {
+      isPublic: true
+    });
   }
+
+  return query.getOne();
+}
+
 
   async findTeamsByUser(userId: number) {
     this.logger.log('(S) Getting teams by user id: '+userId, TeamsService.name);
